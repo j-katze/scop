@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/moth/Projects/42/scop/deps/glfw-build/cmake_install.cmake",
+		"/home/moth/Projects/42/scop/deps/glfw-build/src/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
