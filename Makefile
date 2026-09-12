@@ -2,7 +2,7 @@ NAME =		scop
 CXX =		c++
 
 SDIR =		./src/
-SFILES =	main.cpp
+SFILES =	main.cpp stb_image.cpp
 SRCS =		$(addprefix ${SDIR}, ${SFILES})
 
 GLAD =		./src/glad.c
