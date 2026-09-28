@@ -1,5 +1,8 @@
 #include "../include/glad/glad.h"
 #include <GLFW/glfw3.h>
+#include "../inc/glm/glm.hpp"
+#include "../inc/glm/gtc/matrix_transform.hpp"
+#include "../inc/glm/gtc/type_ptr.hpp"
 
 #include "../inc/shader.hpp"
 #include "../inc/stb_image.h"
@@ -160,8 +163,21 @@ int main() {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, texture2);
 
+        // create transformations
+        glm::mat4 transform = glm::mat4(1.0f); // initialize matrix to identity matrix
+
+        //transform = glm::rotate(transform, glm::radians(90.f), glm::vec3(0.0, 0.0, 1.0));
+        //transform = glm::scale(transform, glm::vec3(0.5, 0.5, 0.5));
+
+        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
         // activate the shader
         customShader.use();
+
+        // get matrixs uniform location and set matrix
+        unsigned int transformLoc = glGetUniformLocation(customShader.ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
 
         // render the triangle / square
         glBindVertexArray(VAO);
