@@ -2,6 +2,7 @@
 #define SHADER_H
 
 #include "../include/glad/glad.h"
+#include "../inc/glm/glm.hpp"
 
 #include <string>
 #include <fstream>
@@ -10,30 +11,30 @@
 
 class Shader {
 public:
-    //program id
+    /* program id */
     unsigned int ID;
 
-    // retreive source code
+    /* retreive source code */
     Shader(const char* vertexPath, const char* fragmentPath) {
         std::string vertexCode;
         std::string fragmentCode;
         std::ifstream vShaderFile;
         std::ifstream fShaderFile;
-        // make sure it can throw exceptions
+        /* make sure it can throw exceptions */
         vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
         fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
         try {
-            // open files
+            /* open files */
             vShaderFile.open(vertexPath);
             fShaderFile.open(fragmentPath);
             std::stringstream vShaderStream, fShaderStream;
-            // read files contents into streams
+            /* read files contents into streams */
             vShaderStream << vShaderFile.rdbuf();
             fShaderStream << fShaderFile.rdbuf();
-            // close file handlers
+            /* close file handlers */
             vShaderFile.close();
             fShaderFile.close();
-            // convert stream into string
+            /* convert stream into string */
             vertexCode = vShaderStream.str();
             fragmentCode = fShaderStream.str();
         }
@@ -42,33 +43,33 @@ public:
         }
         const char* vShaderCode = vertexCode.c_str();
         const char* fShaderCode = fragmentCode.c_str();
-        // compile shaders
+        /* compile shaders */
         unsigned int vertex, fragment;
-        // vertex shader
+        /* vertex shader */
         vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vShaderCode, NULL);
         glCompileShader(vertex);
         checkCompileErrors(vertex, "VERTEX");
-        // fragment shader
+        /* fragment shader */
         fragment = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
         checkCompileErrors(fragment, "FRAGMENT");
-        // shader program
+        /* shader program */
         ID = glCreateProgram();
         glAttachShader(ID, vertex);
         glAttachShader(ID, fragment);
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM");
-        // delete the shaders as thezre no longer needed after linking
+        /* delete the shaders as thezre no longer needed after linking */
         glDeleteShader(vertex);
         glDeleteShader(fragment);
     }
-    // activate the shader
+    /* activate the shader */
     void use() {
         glUseProgram(ID);
     }
-    // utility uniform functions
+    /* utility uniform functions */
     void setBool(const std::string &name, bool value) const {
         glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
     }
@@ -78,9 +79,14 @@ public:
     void setFloat(const std::string &name, float value) const {
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
     }
+    /* ------------------------------------------------------------------------ */
+    void setMat4(const std::string &name, const glm::mat4 &mat) const
+    {
+        glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+    }
 
 private:
-    // checking shader compile errors
+    /* checking shader compile errors */
     void checkCompileErrors(unsigned int shader, std::string type) {
         int success;
         char infoLog[1024];
