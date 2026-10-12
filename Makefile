@@ -29,7 +29,7 @@ IDIR =		./inc/
 #GLEW_LIB =	$(GLEW_PREFIX)/lib/libGLEW.a
 #GLEW_INC =	$(GLEW_PREFIX)/include
 
-CXXFLAGS =	-I $(IDIR) -Wall -Wextra -Werror -std=c++98
+CXXFLAGS =	-I $(IDIR) -Wall -Wextra -Werror -std=c++11
 
 LDLIBS =	-lglfw -lGL -ldl -lpthread -lm -lX11 -lXrandr -lXi -lXxf86vm -lwayland-client -lwayland-cursor
 

@@ -2,7 +2,7 @@
 #define SHADER_H
 
 #include "../include/glad/glad.h"
-#include "../inc/glm/glm.hpp"
+#include "../inc/mat4.hpp"
 
 #include <string>
 #include <fstream>
@@ -80,9 +80,9 @@ public:
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
     }
     /* ------------------------------------------------------------------------ */
-    void setMat4(const std::string &name, const glm::mat4 &mat) const
+    void setMat4(const std::string &name, const Mat4 &mat) const
     {
-        glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, &mat[0][0]);
+        glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, mat.data());
     }
 
 private:
