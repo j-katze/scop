@@ -1,0 +1,38 @@
+[
+  {
+    "file": "src/main.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-I",
+      "./inc/",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++11",
+      "-o",
+      "obj/main.o",
+      "-c",
+      "src/main.cpp"
+    ],
+    "directory": "/home/moth/Projects/42/scop",
+    "output": "obj/main.o"
+  },
+  {
+    "file": "src/stb_image.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-I",
+      "./inc/",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++11",
+      "-o",
+      "obj/stb_image.o",
+      "-c",
+      "src/stb_image.cpp"
+    ],
+    "directory": "/home/moth/Projects/42/scop",
+    "output": "obj/stb_image.o"
+  }
+]

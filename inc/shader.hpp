@@ -1,8 +1,10 @@
-#ifndef SHADER_H
-#define SHADER_H
+#pragma once
+
+#ifndef SHADER_HPP
+#define SHADER_HPP
 
 #include "../include/glad/glad.h"
-#include "../inc/mat4.hpp"
+#include "mat4.hpp"
 
 #include <string>
 #include <fstream>
@@ -20,6 +22,7 @@ public:
         std::string fragmentCode;
         std::ifstream vShaderFile;
         std::ifstream fShaderFile;
+
         /* make sure it can throw exceptions */
         vShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
         fShaderFile.exceptions (std::ifstream::failbit | std::ifstream::badbit);
@@ -41,47 +44,57 @@ public:
         catch (std::ifstream::failure& e) {
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
         }
+
         const char* vShaderCode = vertexCode.c_str();
         const char* fShaderCode = fragmentCode.c_str();
+
         /* compile shaders */
         unsigned int vertex, fragment;
+
         /* vertex shader */
         vertex = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertex, 1, &vShaderCode, NULL);
         glCompileShader(vertex);
         checkCompileErrors(vertex, "VERTEX");
+
         /* fragment shader */
         fragment = glCreateShader(GL_FRAGMENT_SHADER);
         glShaderSource(fragment, 1, &fShaderCode, NULL);
         glCompileShader(fragment);
         checkCompileErrors(fragment, "FRAGMENT");
+
         /* shader program */
         ID = glCreateProgram();
         glAttachShader(ID, vertex);
         glAttachShader(ID, fragment);
         glLinkProgram(ID);
         checkCompileErrors(ID, "PROGRAM");
+
         /* delete the shaders as thezre no longer needed after linking */
         glDeleteShader(vertex);
         glDeleteShader(fragment);
     }
+
     /* activate the shader */
     void use() {
         glUseProgram(ID);
     }
+
     /* utility uniform functions */
     void setBool(const std::string &name, bool value) const {
         glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
     }
+
     void setInt(const std::string &name, int value) const {
         glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
     }
+
     void setFloat(const std::string &name, float value) const {
         glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
     }
+
     /* ------------------------------------------------------------------------ */
-    void setMat4(const std::string &name, const Mat4 &mat) const
-    {
+    void setMat4(const std::string &name, const Mat4 &mat) const {
         glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, mat.data());
     }
 
