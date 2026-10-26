@@ -51,7 +51,6 @@ Vec2 operator* (const Vec2& v, const float& scalar) {
     return {v.x * scalar, v.y * scalar};
 }
 
-/* devide vector by a scalar */
 Vec2 operator/ (const Vec2& v, const float& scalar) {
     return {v.x / scalar, v.y / scalar};
 }

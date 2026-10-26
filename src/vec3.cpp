@@ -7,6 +7,7 @@ Vec3& Vec3::operator+= (const Vec3& rhs) {
    x += rhs.x;
    y += rhs.y;
    z += rhs.z;
+
    return *this;
 }
 
@@ -14,6 +15,7 @@ Vec3& Vec3::operator-= (const Vec3& rhs) {
     x -= rhs.x;
     y -= rhs.y;
     z -= rhs.z;
+
     return *this;
 }
 
@@ -75,5 +77,6 @@ Vec3 normalize (Vec3 v) {
     if (v.length() == 0.0f) {
         return {0.0f, 0.0f, 0.0f};
     }
+
     return v / v.length();
 }

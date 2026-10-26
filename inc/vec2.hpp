@@ -27,10 +27,11 @@ inline Vec2 operator- (Vec2 lhs, const Vec2& rhs);
 /* a scalar has only magnitude (length), no direction */
 inline Vec2 operator* (const Vec2& v, const float& scalar);
 
-/* devide vector by a scalar */
+/* divide vector by a scalar */
 inline Vec2 operator/ (const Vec2& v, const float& scalar);
 
-/* cross product of two 2d vectors points along the z axis, essentially a 3d vector with only a z component, since there is only one component the function returns it as a scalar */
+/* cross product of two 2d vectors points along the z axis, essentially a 3d vector with only a z component,
+ * since there is only one component the function returns it as a scalar */
 inline float cross (const Vec2& a, const Vec2& b);
 
 /* dot product, multiplies two vectors and adds them up, returns a scalar */

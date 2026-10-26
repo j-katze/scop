@@ -9,7 +9,6 @@
 
 #include <iostream>
 #include <unordered_map>
-// #include <cmath>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -38,7 +37,6 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 unsigned int VAO, VBO;
-unsigned int texture1;
 
 enum RenderMode {
     SINGLECOLOUR,
@@ -82,87 +80,19 @@ int main(int argc, char* argv[]) {
 
     glEnable(GL_DEPTH_TEST);
 
-    /*  SHADER SECTION  */
+    /*loading shader */
     Shader customShader("shaders/vertex.vert", "shaders/fragment.frag");
 
+    /* loading model */
     ObjModel model;
     const bool modelLoaded = (argc > 1) && model.load(argv[1]);
 
     if (!modelLoaded) {
-        std::cout << "No model provided, using default cube." << std::endl;
-        /* default cube in case no object was loaded */
-        float vertices[] = {
-            -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 0.0f,
-             0.5f, -0.5f, -0.5f,    1.0f, 0.0f,     1.0f, 0.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     1.0f, 1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     1.0f, 1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 1.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 0.0f,
-
-            -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 0.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,    1.0f, 1.0f,     1.0f, 1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,    1.0f, 1.0f,     1.0f, 1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,     0.0f, 1.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 1.0f,
-
-            -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     0.0f, 1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     0.0f, 1.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 0.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     0.0f, 1.0f, 1.0f,
-
-             0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 1.0f, 1.0f,
-             0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     1.0f, 1.0f, 0.0f,
-             0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     1.0f, 0.0f, 0.0f, 
-             0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     1.0f, 0.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     1.0f, 0.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 1.0f, 1.0f,
-
-            -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 0.0f, 0.0f,
-             0.5f, -0.5f, -0.5f,    1.0f, 1.0f,     1.0f, 0.0f, 0.0f,
-             0.5f, -0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 0.0f, 1.0f,
-             0.5f, -0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 0.0f, 0.0f,
-
-            -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 1.0f, 0.0f,
-             0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     1.0f, 1.0f, 0.0f,
-             0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 1.0f, 1.0f,
-             0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,     0.0f, 1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 1.0f, 0.0f
-        };
-
-        glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
-
-        glBindVertexArray(VAO);
-
-        /* copy vertex array to buffer for opengl to use */
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-        /* set the vertex attribute pointer */
-        /* position */
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(0);
-
-        /* texture coordinate */
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-        glEnableVertexAttribArray(2);
-
-        /* colour */
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
-        glEnableVertexAttribArray(3);
-
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
+        model.defaultCube();
     }
 
-    /* texture */
-    // unsigned int texture1, texture2;
+    /* loading texture */
+    unsigned int texture1;
     glGenTextures(1, &texture1);
     glBindTexture(GL_TEXTURE_2D, texture1);
 
@@ -177,7 +107,7 @@ int main(int argc, char* argv[]) {
     /* load image, create texture and generate mipmaps */
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load("textures/flowers.jpg", &width, &height, &nrChannels, 0);
+    unsigned char *data = stbi_load("textures/wall.jpg", &width, &height, &nrChannels, 0);
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -187,34 +117,30 @@ int main(int argc, char* argv[]) {
     }
     stbi_image_free(data);
 
-    /* uncomment to draw in wireframe mode */
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-    /*  SHADER SECTION END  */
-
     /* render loop */
     while (!glfwWindowShouldClose(window)) {
-        camera.printState();
+        /* get deltatime */
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        /* input */
+        /* process input */
         processInput(window);
+        camera.printState();
+        camera.Update(deltaTime);
 
-        /* render */
+        /* clear buffers */
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         /* bind texture */
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture1);
-        // glActiveTexture(GL_TEXTURE1);
-        // glBindTexture(GL_TEXTURE_2D, texture2);
 
         /* activate the shader */
         customShader.use();
 
+        /* blend between render modes if mode was switched */
         if (blendAmount < 1.0f) {
             blendAmount += deltaTime * transitionDuration;
             if (blendAmount >= 1.0f) {
@@ -233,32 +159,24 @@ int main(int argc, char* argv[]) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         /* pass projection matrix to shader */
-        Mat4 projection = Mat4::identityMatrix();
-        projection = perspective(camera.Zoom * 3.14159265358979323846f / 180.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        customShader.setMat4("projection", projection);
+        Mat4 projectionMat = Mat4::identityMatrix();
+        projectionMat = perspective(camera.Zoom * 3.14159265358979323846f / 180.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        customShader.setMat4("projection", projectionMat);
 
         /* camera / view transformations */
-        Mat4 view = Mat4::identityMatrix();
-        view = lookAt(camera.Position, camera.Position + camera.Front, camera.Up);
-        customShader.setMat4("view", view);
+        Mat4 viewMat = Mat4::identityMatrix();
+        viewMat = lookAt(camera.Position, camera.Position + camera.Front, camera.Up);
+        customShader.setMat4("view", viewMat);
 
-        Mat4 modelM = Mat4::identityMatrix();
-        modelM = translate(modelM, {0.0f, 0.0f, 0.0f});
-        customShader.setMat4("model", modelM);
+        Mat4 modelMat = Mat4::identityMatrix();
+        modelMat = translate(modelMat, model.centerVector);
+        customShader.setMat4("model", modelMat);
 
-        if (modelLoaded) {
-            model.draw();
-        }
-        else {
-            glBindVertexArray(VAO);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        model.draw();
 
         /* swap buffers */
         glfwSwapBuffers(window);
         glfwPollEvents();
-
-        camera.Update(deltaTime);
     }
 
     /* optional: de allocate all resources once theyve outlived their purpose: */
@@ -330,20 +248,18 @@ void processInput(GLFWwindow *window) {
     if (pressKeyOnce(window, GLFW_KEY_3)) {
         renderWireframe = !renderWireframe;
     }
-    // if (pressKeyOnce(window, GLFW_KEY_Q)) {
-    //     camera.printState();
-    // }
 }
 
 /* make sure viewport matches window dimensions after rezising */
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    (void)window; //why does function ask for window but not use it?
+    (void)window;
+
     glViewport(0, 0, width, height);
 }
 
 /* whenever mouse moves this callback is called */
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
-    (void)window; //why does function ask for window but not use it?
+    (void)window;
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
@@ -365,8 +281,9 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
 
 /* whenever scroll wheel scrolls this callback is called */
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    (void)window; //why does function ask for window but not use it?
+    (void)window;
     (void)xoffset;
+
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
 

@@ -11,20 +11,19 @@ struct Vec3 {
     float& operator[] (int i);
     const float& operator[] (int i) const;
 
-    /* get length of vector */
+    /* returns length of vector */
     float length() const;
-    /* return true if all members of vector are zero */
+    /* returns true if all members of vector are zero */
     bool isZero() const;
 };
 
-/* add two vectors together */
+/* adds two vectors together */
 Vec3 operator+ (Vec3 lhs, const Vec3& rhs);
 
-/* subtract vector b from vector a */
+/* subtracts vector rhs from vector lhs */
 Vec3 operator- (Vec3 lhs, const Vec3& rhs);
 
-/* multiply vector by a scalar */
-/* a scalar has only magnitude (length), no direction */
+/* multiplies a vector by a scalar */
 Vec3 operator* (const Vec3& v, const float& scalar);
 
 /* devide vector by a scalar */

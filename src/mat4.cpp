@@ -11,6 +11,12 @@ const float& Mat4::operator[] (std::size_t index) const {
 }
 
 Mat4 Mat4::identityMatrix() {
+    /* [ 1 0 0 0 ] */
+    /* [ 0 1 0 0 ] */
+    /* [ 0 0 1 0 ] */
+    /* [ 0 0 0 1 ] */
+    /* identity matrix is used as the basis for other matrices, does not do anything on its own */
+
     Mat4 m{};
 
     m[0] = m[5] = m[10] = m[15] = 1.0f;
@@ -37,6 +43,14 @@ Mat4 multiply(const Mat4& lhs, const Mat4& rhs) {
 }
 
 Mat4 scale(const Mat4& m, const Vec3& v) {
+    /* formula for scaling matrix */
+    /* where S is scaling vector */
+
+    /* [ Sx  0  0 0] */
+    /* [  0 Sy  0 0] */
+    /* [  0  0 Sz 0] */
+    /* [  0  0  0 1] */
+
     Mat4 s = Mat4::identityMatrix();
 
     s[0] = v.x;
@@ -47,6 +61,14 @@ Mat4 scale(const Mat4& m, const Vec3& v) {
 }
 
 Mat4 translate(const Mat4& m, Vec3 v) {
+    /* formula for translation matrix */
+    /* where T is translation vector */
+
+    /* [ 1 0 0 Tx ] */
+    /* [ 0 1 0 Ty ] */
+    /* [ 0 0 1 Tz ] */
+    /* [ 0 0 0  1 ] */
+
     Mat4 t = Mat4::identityMatrix();
 
     t[12] = v.x;
@@ -56,17 +78,18 @@ Mat4 translate(const Mat4& m, Vec3 v) {
     return multiply(m, t);
 }
 
-Mat4 rotate(const Mat4& m, float angle, Vec3 axis) {
-    /* formula for rotation matrix for arbitrary angle */
-    /* where R is rotation vector (Rx is x axis, Ry is y axis, Rz is z axis), θ is angle vector (needs to be unit vector) */
+Mat4 rotate(const Mat4& m, float angleRadians, Vec3 axis) {
+    /* formula for rotation matrix for arbitrary angle
+     * where R is rotation vector (Rx is x axis, Ry is y axis, Rz is z axis),
+     * θ is angle vector (needs to be unit vector) */
 
     /* [     cosθ+Rx^2*(1−cosθ)   Rx*Ry*(1−cosθ)−Rz*sinθ   Rx*Rz*(1−cosθ)+Ry*sinθ   0 ] */
     /* [ Ry*Rx*(1−cosθ)+Rz*sinθ       cosθ+Ry^2*(1−cosθ)   Ry*Rz*(1−cosθ)−Rx*sinθ   0 ] */
     /* [ Rz*Rx*(1−cosθ)−Ry*sinθ   Rz*Ry*(1−cosθ)+Rx*sinθ       cosθ+Rz^2*(1−cosθ)   0 ] */
     /* [                      0                        0                        0   1 ] */
 
-    const float c = std::cos(angle);
-    const float s = std::sin(angle);
+    const float c = std::cos(angleRadians);
+    const float s = std::sin(angleRadians);
     const float oneMinusC = 1.0f - c;
     const float x = axis.x, y = axis.y, z = axis.z;
 
@@ -90,6 +113,19 @@ Mat4 rotate(const Mat4& m, float angle, Vec3 axis) {
 }
 
 Mat4 perspective(float fovRadians, float aspect, float nearPlane, float farPlane) {
+    /* formula for perspective projection matrix */
+    /* where f is focal length, Z is depth (Znear is near plane, Zfar is far plane) */
+
+    /* [ f 0                          0                         0 ] */
+    /* [ 0 f                          0                         0 ] */
+    /* [ 0 0  (Zfar+Znear)/(Znear-Zfar) 2*Zfar*Znear/(Znear-Zfar) ] */
+    /* [ 0 0                         -1                         0 ] */
+
+    /* formula for deriving focal length from FOV */
+
+    /* 1/2*tan(FOV/2) */
+    /* dividing focal length by aspect ratio in m[0] avoids image stretching when window is not a perfect square */
+
     Mat4 m{};
     const float f = 1.0f / std::tan(fovRadians / 2);
 
@@ -103,6 +139,14 @@ Mat4 perspective(float fovRadians, float aspect, float nearPlane, float farPlane
 }
 
 Mat4 lookAt(Vec3 position, Vec3 target, Vec3 worldUp) {
+    /* formula for lookat matrix */
+    /* where R is right vector, U is up vector, D is direction (forward) vector, P is camera position vector */
+
+    /* [ Rx Ry Rz 0 ]   [ 1 0 0 -Px ] */
+    /* [ Ux Uy Uz 0 ]   [ 0 1 0 -Py ] */
+    /* [ Dx Dy Dz 0 ] * [ 0 0 1 -Pz ] */
+    /* [  0  0  0 1 ]   [ 0 0 0   1 ] */
+
     const Vec3 forward = normalize(target - position);
     const Vec3 right = normalize(cross(forward, worldUp));
     const Vec3 up = cross(right, forward);
