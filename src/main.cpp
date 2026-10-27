@@ -4,8 +4,8 @@
 #include "shader.hpp"
 #include "camera.hpp"
 #include "ObjModel.hpp"
+#include "BmpImage.hpp"
 #include "mat4.hpp"
-#include "stb_image.h"
 
 #include <iostream>
 #include <unordered_map>
@@ -92,30 +92,12 @@ int main(int argc, char* argv[]) {
     }
 
     /* loading texture */
-    unsigned int texture1;
-    glGenTextures(1, &texture1);
-    glBindTexture(GL_TEXTURE_2D, texture1);
+    BmpImage texture;
+    const bool textureLoaded = (argc > 2) && texture.loadTexture(argv[2]);
 
-    /* set texture wrapping parameters */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    /* set texture filtering parameters */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    /* load image, create texture and generate mipmaps */
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load("textures/wall.jpg", &width, &height, &nrChannels, 0);
-    if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+    if (!textureLoaded) {
+        return 1;
     }
-    else {
-        std::cout << "Failed to load texture" << std::endl;
-    }
-    stbi_image_free(data);
 
     /* render loop */
     while (!glfwWindowShouldClose(window)) {
@@ -135,7 +117,7 @@ int main(int argc, char* argv[]) {
 
         /* bind texture */
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
+        glBindTexture(GL_TEXTURE_2D, texture.textureID);
 
         /* activate the shader */
         customShader.use();
@@ -182,7 +164,6 @@ int main(int argc, char* argv[]) {
     /* optional: de allocate all resources once theyve outlived their purpose: */
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    // glDeleteBuffers(1, &EBO);
 
     /* terminate program, clearing all allocated glfw resources */
     glfwTerminate();
