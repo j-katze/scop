@@ -1,3 +1,4 @@
 scop
 obj/
 *.o
+valgrind.log

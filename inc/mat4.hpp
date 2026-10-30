@@ -1,11 +1,9 @@
-#pragma once
-
-#ifndef mat4_hpp
-#define mat4_hpp
-
-#include <cstddef>
+#ifndef MAT4_HPP
+#define MAT4_HPP
 
 #include "vec3.hpp"
+
+#include <cstddef>
 
 struct Mat4 {
     /* opengl expects column major ordering: element at column c, row r is v[c * 4 + r] */
@@ -17,8 +15,8 @@ struct Mat4 {
     /* [ 3 7 11 15 ] */
     float entries[16]{};
 
-    float&operator[] (std::size_t index);
-    const float& operator[] (std::size_t index) const;
+    float&operator[](size_t index);
+    const float& operator[](size_t index) const;
 
     /* returns identity matrix */
     static Mat4 identityMatrix();
@@ -46,4 +44,3 @@ Mat4 perspective(float fovRadians, float aspect, float nearPlane, float farPlane
 Mat4 lookAt(Vec3 position, Vec3 target, Vec3 worldUp);
 
 #endif
-

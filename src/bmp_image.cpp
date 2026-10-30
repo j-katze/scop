@@ -1,5 +1,5 @@
 #include "../include/glad/glad.h"
-#include "BmpImage.hpp"
+#include "bmp_image.hpp"
 
 #include <cstdint>
 #include <fstream>
@@ -7,15 +7,28 @@
 #include <iostream>
 #include <limits>
 
-bool BmpImage::loadTexture(const std::string &path) {
-    // int width, height, nrChannels;
+BmpImage::~BmpImage() {
+    cleanup();
+}
 
+const unsigned int& BmpImage::getTextureId() const {
+    return textureID_;
+}
+
+void BmpImage::cleanup() {
+    if (textureID_ != 0) {
+        glDeleteTextures(1, &textureID_);
+        textureID_ = 0;
+    }
+}
+
+bool BmpImage::loadTexture(const std::string &path) {
     if (!loadFile(path)) {
         return false;
     }
 
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_2D, textureID);
+    glGenTextures(1, &textureID_);
+    glBindTexture(GL_TEXTURE_2D, textureID_);
 
     /* set texture wrapping parameters */
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -26,10 +39,12 @@ bool BmpImage::loadTexture(const std::string &path) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image.width, image.height, 0,
-                 GL_RGB, GL_UNSIGNED_BYTE, image.rgb.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_.width, image_.height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image_.rgb.data());
     glGenerateMipmap(GL_TEXTURE_2D);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     return 1;
 }
@@ -41,61 +56,66 @@ bool BmpImage::loadFile(const std::string& path) {
         return false;
     }
 
-    if (!readU16(file, fileHeader.signature) ||
-        !readU32(file, fileHeader.fileSize)  ||
-        !readU16(file, fileHeader.reserved1) ||
-        !readU16(file, fileHeader.reserved2) ||
-        !readU32(file, fileHeader.pixelOffset)) {
+    if (!readU16(file, fileHeader_.signature) ||
+        !readU32(file, fileHeader_.fileSize)  ||
+        !readU16(file, fileHeader_.reserved1) ||
+        !readU16(file, fileHeader_.reserved2) ||
+        !readU32(file, fileHeader_.pixelOffset))
+    {
         std::cerr << "File is too short for BMP header" << std::endl;
         return false;
     }
 
-    if (fileHeader.signature != 0x4D42) {
+    if (fileHeader_.signature != 0x4D42) {
         std::cerr << "not a BMP file" << std::endl;
         return false;
     }
 
-    if (!readU32(file, infoHeader.dibsize)         ||
-        !readI32(file, infoHeader.width)           ||
-        !readI32(file, infoHeader.height)          ||
-        !readU16(file, infoHeader.colourPlanes)   ||
-        !readU16(file, infoHeader.bitsPerPixel)    ||
-        !readU32(file, infoHeader.compression)     ||
-        !readU32(file, infoHeader.imageSize)       ||
-        !readI32(file, infoHeader.xPixelsPerMeter) ||
-        !readI32(file, infoHeader.yPixelsPerMeter) ||
-        !readU32(file, infoHeader.colourTable)    ||
-        !readU32(file, infoHeader.importantColours)) {
+    if (!readU32(file, infoHeader_.dibsize)         ||
+        !readI32(file, infoHeader_.width)           ||
+        !readI32(file, infoHeader_.height)          ||
+        !readU16(file, infoHeader_.colourPlanes)   ||
+        !readU16(file, infoHeader_.bitsPerPixel)    ||
+        !readU32(file, infoHeader_.compression)     ||
+        !readU32(file, infoHeader_.imageSize)       ||
+        !readI32(file, infoHeader_.xPixelsPerMeter) ||
+        !readI32(file, infoHeader_.yPixelsPerMeter) ||
+        !readU32(file, infoHeader_.colourTable)    ||
+        !readU32(file, infoHeader_.importantColours))
+    {
         std::cerr << "file is too short for a BMP info header" << std::endl;
         return false;
     }
 
-    if (infoHeader.dibsize < 40) {
+    if (infoHeader_.dibsize < 40) {
         std::cerr << "unsuported BMP header" << std::endl;
         return false;
     }
 
-    if (infoHeader.width <= 0 || infoHeader.height <= 0 || infoHeader.height == std::numeric_limits<int32_t>::min()) {
+    if (infoHeader_.width <= 0 ||
+        infoHeader_.height == 0 ||
+        infoHeader_.height == std::numeric_limits<int32_t>::min())
+    {
         std::cerr << "invalid BMP dimensions" << std::endl;
         return false;
     }
 
-    if (infoHeader.colourPlanes != 1 || infoHeader.bitsPerPixel != 24 || infoHeader.compression != 0) {
+    if (infoHeader_.colourPlanes != 1 || infoHeader_.bitsPerPixel != 24 || infoHeader_.compression != 0) {
         std::cerr << "only uncompressed 24 bit BMP files are supported" << std::endl;
         return false;
     }
 
     /* negative height means rows are stored top to bottom */
     int absoluteHeight;
-    if (infoHeader.height < 0) {
-        absoluteHeight = -infoHeader.height;
+    if (infoHeader_.height < 0) {
+        absoluteHeight = -infoHeader_.height;
     }
     else {
-        absoluteHeight = infoHeader.height;
+        absoluteHeight = infoHeader_.height;
     }
 
     /* row = number of pixels times bytes per pixel */
-    const uint64_t rowBytes = uint64_t(infoHeader.width) * (infoHeader.bitsPerPixel / 8);
+    const uint64_t rowBytes = uint64_t(infoHeader_.width) * (infoHeader_.bitsPerPixel / 8);
 
     /* BMP rows are padded so their length is divisible by 4, this rounds up rowBytes to the next multiple of 4 */
     /* the second modulo handles the case where rowBytes is already divisible by 4 */
@@ -103,21 +123,21 @@ bool BmpImage::loadFile(const std::string& path) {
     const uint64_t paddedRowBytes = rowBytes + padding;
 
     /* total size of image without padding */
-    const uint64_t pixelBytes = rowBytes * uint64_t(infoHeader.height);
+    const uint64_t pixelBytes = rowBytes * uint64_t(infoHeader_.height);
 
-    if (pixelBytes > image.rgb.max_size() ||
+    if (pixelBytes > image_.rgb.max_size() ||
         paddedRowBytes > std::numeric_limits<size_t>::max()) {
         std::cerr << "BMP is too large" << std::endl;
         return false;
     }
 
-    image.width = infoHeader.width;
-    image.height = absoluteHeight;
-    image.rgb.resize(static_cast<size_t>(pixelBytes));
+    image_.width = infoHeader_.width;
+    image_.height = absoluteHeight;
+    image_.rgb.resize(static_cast<size_t>(pixelBytes));
 
-    file.seekg(fileHeader.pixelOffset, std::ios::beg);
+    file.seekg(fileHeader_.pixelOffset, std::ios::beg);
     if (!file) {
-        image = {};
+        image_ = {};
         std::cerr << "invalid BMP pixel data offset" << std::endl;
         return false;
     }
@@ -126,14 +146,14 @@ bool BmpImage::loadFile(const std::string& path) {
 
     for (int fileRow = 0; fileRow < absoluteHeight; ++fileRow) {
         if (!file.read(reinterpret_cast<char*>(row.data()), static_cast<std::streamsize>(row.size()))) {
-            image = {};
+            image_ = {};
             std::cerr << "unexpected end of BMP pixel data" << std::endl;
             return false;
         }
 
         /* if height is negative reverse row order, tow row first going down */
         int outputRow;
-        if (infoHeader.height > 0) {
+        if (infoHeader_.height > 0) {
             outputRow = fileRow;
         }
         else {
@@ -141,14 +161,15 @@ bool BmpImage::loadFile(const std::string& path) {
         }
 
         /* pixels are stored in BGR order, reorder them to RGB */
-        for (int x = 0; x < infoHeader.width; ++x) {
+        for (int x = 0; x < infoHeader_.width; ++x) {
             /* read pixels in reverse order otherwise the image will be flipped */
-            const size_t src = static_cast<size_t>(infoHeader.width - 1 - x) * (infoHeader.bitsPerPixel / 8);
-            const size_t dst = (static_cast<size_t>(outputRow) * infoHeader.width + x) * (infoHeader.bitsPerPixel / 8);
+            const size_t src = static_cast<size_t>(infoHeader_.width - 1 - x) * (infoHeader_.bitsPerPixel / 8);
+            const size_t dst =
+                (static_cast<size_t>(outputRow) * infoHeader_.width + x) * (infoHeader_.bitsPerPixel / 8);
 
-            image.rgb[dst + 0] = row[src + 2];
-            image.rgb[dst + 1] = row[src + 1];
-            image.rgb[dst + 2] = row[src + 0];
+            image_.rgb[dst + 0] = row[src + 2];
+            image_.rgb[dst + 1] = row[src + 1];
+            image_.rgb[dst + 2] = row[src + 0];
         }
     }
 

@@ -1,4 +1,4 @@
-#include "ObjModel.hpp"
+#include "obj_model.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -6,17 +6,44 @@
 #include <algorithm>
 #include <random>
 
-bool ObjModel::load(const std::string& path) {
-    /* destroy previous model when loading new one */
-    /*currently loading a new model is not implemented */
-    destroy();
+ObjModel::~ObjModel() {
+    cleanup();
+}
 
+const unsigned int& ObjModel::getVAO() const {
+    return VAO_;
+}
+
+const unsigned int& ObjModel::getVBO() const {
+    return VBO_;
+}
+
+const GLsizei& ObjModel::getVertexCount() const {
+    return vertexCount_;
+}
+
+void ObjModel::cleanup() {
+    if (VBO_ != 0) {
+        glDeleteBuffers(1, &VBO_);
+    }
+    if (VAO_ != 0) {
+        glDeleteVertexArrays(1, &VAO_);
+    }
+    VAO_ = 0;
+    VBO_ = 0;
+    vertexCount_ = 0;
+}
+
+bool ObjModel::load(const std::string& path) {
     /* open the file for reading */
     std::ifstream file(path);
     if (!file) {
         std::cerr << "Could not open OBJ file: " << path << std::endl;
         return false;
     }
+
+    /* destroy previous model when loading new one */
+    cleanup();
 
     std::vector<float> positions;
     std::vector<float> texcoords;
@@ -31,7 +58,6 @@ bool ObjModel::load(const std::string& path) {
         std::string type;
         stream >> type;
 
-        /* skipping empty lines and comments */
         if (type.empty() || type[0] == '#') {
             continue;
         }
@@ -164,7 +190,11 @@ bool ObjModel::load(const std::string& path) {
         generatePlanarUVs(vertices);
     }
 
-    centerVector = centerObject(vertices);
+    centerVector_ = centerObject(vertices);
+
+    for (Vertex& vertex : vertices) {
+        vertex.position += centerVector_;
+    }
 
     vertexCount_ = static_cast<GLsizei>(vertices.size());
 
@@ -206,17 +236,8 @@ bool ObjModel::load(const std::string& path) {
     return true;
 }
 
-void ObjModel::draw() const {
-    if (VBO_ == 0) {
-        return;
-    }
-
-    glBindVertexArray(VAO_);
-    glDrawArrays(GL_TRIANGLES, 0, vertexCount_);
-    glBindVertexArray(0);
-}
-
 void ObjModel::defaultCube() {
+    cleanup();
     std::cout << "No model provided, using default cube." << std::endl;
     float vertices[] = {
         -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 0.0f,
@@ -288,18 +309,6 @@ void ObjModel::defaultCube() {
     glBindVertexArray(0);
 
     vertexCount_ = 36;
-}
-
-void ObjModel::destroy() {
-    if (VBO_ != 0) {
-        glDeleteBuffers(1, &VBO_);
-    }
-    if (VAO_ != 0) {
-        glDeleteVertexArrays(1, &VAO_);
-    }
-    VAO_ = 0;
-    VBO_ = 0;
-    vertexCount_ = 0;
 }
 
 bool ObjModel::parseFaceVertex(const std::string& token, int& position, int& texcoord, int& normal) {

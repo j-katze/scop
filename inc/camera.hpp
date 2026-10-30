@@ -1,11 +1,10 @@
-#pragma once
-
-#ifndef camera_hpp
-#define camera_hpp
+#ifndef CAMERA_HPP
+#define CAMERA_HPP
 
 #include "../include/glad/glad.h"
 #include "vec3.hpp"
 #include "mat4.hpp"
+#include "object.hpp"
 
 //   Y      +Y up       -Y down
 //   |
@@ -13,89 +12,86 @@
 //  /
 // Z        +Z back     -Z front
 
-enum Camera_Movement {
-    FORWARD,
-    BACKWARD,
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN
-};
-
 /* default camera values */
 const float YAW         = 0.0f;
 const float PITCH       = 0.0f;
 const float SPEED       = 2.5f;
 const float SENSITIVITY = 0.1f;
-const float ZOOM        = 45.0f;
+const float FOV        = 45.0f;
 
-class Camera {
+struct CameraVectors {
+    Vec3 front;
+    Vec3 up;
+    Vec3 right;
+};
+
+class Camera{
 public:
-    /* camera attributes */
-    Vec3        Position;
-    Vec3        Front;
-    Vec3        Up;
-    Vec3        Right;
-    Vec3        WorldUp;
-
-    /* euler angles */
-    float       Yaw;
-    float       Pitch;
-
-    /* camera options */
-    float       MovementSpeed;
-    float       MouseSensitivity;
-    float       Zoom;
-
-    /* constructor with vectors */
     Camera(
         Vec3 position = {0.0f, 0.0f, 0.0f},
         Vec3 up = {0.0f, 1.0f, 0.0f},
         float yaw = YAW, float pitch = PITCH
     );
 
-    /* constructor with scalar values */
-    Camera(
-        float posX, float posY, float posZ,
-        float upX, float upY, float upZ,
-        float yaw, float pitch
-    );
+    CameraVectors getCameraVectors() const;
+    const bool& getCameraActive() const;
 
     /* returns the view matrix calculated using Euler Angles and the LookAt Matrix */
-    Mat4 GetViewMatrix() const;
+    Mat4 getViewMatrix() const;
+    Mat4 getPerspectiveMatrix(float screenWidth, float screenHeight) const;
 
-    void ProcessKeyboard(Camera_Movement direction, float deltaTime);
+    void toggleCameraActive();
 
-    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true);
-
-    void ProcessMouseScroll(float yoffset);
+    void processKeyboard(MovementDirections direction, float deltaTime);
+    void processMouseMovement(float xoffset, float yoffset);
+    void processMouseScroll(float yoffset);
 
     /* switch between orbit and free cam */
-    void ToggleFreeCam();
+    void toggleFreeCam();
 
-    void Update(float deltaTime);
+    void update(float deltaTime);
 
     void printState(void);
 
 private:
-    /* orbit camera */
-    enum Camera_Mode {
+    enum class CameraMode {
         ORBITCAM,
         FREECAM,
         SWITCHING
     };
-    Camera_Mode cameraMode      = ORBITCAM;
-    Vec3        target          {0.0f, 0.0f, 0.0f};
-    float       radius          = 10.0f;
-    float       targetRadius    = 10.0f;
-    float       minRadius       = 0.5f;
-    float       maxRadius       = 50.0f;
-    float       targetYaw;
-    float       targetPitch;
-    float snapYawStart;
-    float snapYawTarget;
-    float snapYawDelta1;
-    float snapYawDelta2;
+
+    Vec3       position_;
+    Vec3       front_;
+    Vec3       up_;
+    Vec3       right_;
+    Vec3       worldUp_;
+
+    /* euler angles */
+    float      yaw_;
+    float      pitch_;
+
+    /* camera options */
+    float      movementSpeed_;
+    float      mouseSensitivity_;
+    float      fieldOfView_;
+
+    CameraMode cameraMode_   = CameraMode::ORBITCAM;
+
+    bool       cameraActive_ = false;
+
+    /* orbit camera */
+    Vec3       target_       {0.0f, 0.0f, 0.0f};
+    float      radius_       = 10.0f;
+    float      targetRadius_ = 10.0f;
+    float      minRadius_    = 0.5f;
+    float      maxRadius_    = 50.0f;
+    float      targetYaw_;
+    float      targetPitch_;
+
+    float      snapYawStart_;
+    float      snapYawTarget_;
+    float      snapYawDelta1_;
+    float      snapYawDelta2_;
 
     /* convert degrees to radians */
     static float radians(float degrees);
@@ -105,10 +101,8 @@ private:
 
     /* calculates the front vector from the Camera's (updated) Euler Angles */
     void updateCameraVectors();
-
     void updateOrbitCamera();
 
     static float smoothlerp(float a, float b, float decay, float dt);
 };
 #endif
-

@@ -6,7 +6,7 @@ float& Mat4::operator[](std::size_t index) {
     return entries[index];
 }
 
-const float& Mat4::operator[] (std::size_t index) const {
+const float& Mat4::operator[](std::size_t index) const {
     return entries[index];
 }
 

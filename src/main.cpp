@@ -3,8 +3,7 @@
 
 #include "shader.hpp"
 #include "camera.hpp"
-#include "ObjModel.hpp"
-#include "BmpImage.hpp"
+#include "object.hpp"
 #include "mat4.hpp"
 
 #include <iostream>
@@ -16,8 +15,8 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 /* settings */
-const unsigned int SCR_WIDTH = 800;
-const unsigned int SCR_HEIGHT = 600;
+int SCR_WIDTH = 800;
+int SCR_HEIGHT = 600;
 
 /* camera */
 //   Y      +Y up   -Y down
@@ -28,6 +27,7 @@ const unsigned int SCR_HEIGHT = 600;
 
 //             X     Y     Z
 Camera camera({0.0f, 0.0f, 10.0f});
+Object model;
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -36,16 +36,14 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-unsigned int VAO, VBO;
-
-enum RenderMode {
+enum class RenderMode {
     SINGLECOLOUR,
     VERTEXCOLOUR,
     TEXTURE
 };
 
-RenderMode currentMode = VERTEXCOLOUR;
-RenderMode nextMode = VERTEXCOLOUR;
+RenderMode currentMode = RenderMode::VERTEXCOLOUR;
+RenderMode nextMode = RenderMode::VERTEXCOLOUR;
 float blendAmount = 1.0f;
 const float transitionDuration = 1.0f;
 
@@ -53,7 +51,10 @@ bool renderWireframe = false;
 
 int main(int argc, char* argv[]) {
     /* initialize */
-    glfwInit();
+    if (!glfwInit()) {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        return 1;
+    }
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -70,33 +71,29 @@ int main(int argc, char* argv[]) {
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
     /* load OpenGL function pointers via GLAD */
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "Failed to load OpenGL functions with GLAD\n";
+        glfwDestroyWindow(window);
+        glfwTerminate();
         return 1;
     }
 
+    glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
+    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
     glEnable(GL_DEPTH_TEST);
 
     /*loading shader */
     Shader customShader("shaders/vertex.vert", "shaders/fragment.frag");
 
-    /* loading model */
-    ObjModel model;
-    const bool modelLoaded = (argc > 1) && model.load(argv[1]);
+    const bool modelLoaded = argc > 1 && model.loadModel(argv[1]);
+    const bool textureLoaded = argc > 2 && model.loadTexture(argv[2]);
 
     if (!modelLoaded) {
-        model.defaultCube();
+        model.loadDefaultCube();
     }
-
-    /* loading texture */
-    BmpImage texture;
-    const bool textureLoaded = (argc > 2) && texture.loadTexture(argv[2]);
-
     if (!textureLoaded) {
-        return 1;
+        std::cerr << "no texture supplied" << std::endl;
     }
 
     /* render loop */
@@ -108,16 +105,12 @@ int main(int argc, char* argv[]) {
 
         /* process input */
         processInput(window);
-        camera.printState();
-        camera.Update(deltaTime);
+        camera.update(deltaTime);
+        // camera.printState();
 
         /* clear buffers */
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        /* bind texture */
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture.textureID);
 
         /* activate the shader */
         customShader.use();
@@ -135,36 +128,26 @@ int main(int argc, char* argv[]) {
         customShader.setInt("nextMode", static_cast<int>(nextMode));
         customShader.setFloat("blendAmount", blendAmount);
 
-        if (renderWireframe)
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        else
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
         /* pass projection matrix to shader */
-        Mat4 projectionMat = Mat4::identityMatrix();
-        projectionMat = perspective(camera.Zoom * 3.14159265358979323846f / 180.0f, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        Mat4 projectionMat = camera.getPerspectiveMatrix((float)SCR_WIDTH, (float)SCR_HEIGHT);
         customShader.setMat4("projection", projectionMat);
 
         /* camera / view transformations */
-        Mat4 viewMat = Mat4::identityMatrix();
-        viewMat = lookAt(camera.Position, camera.Position + camera.Front, camera.Up);
+        Mat4 viewMat = camera.getViewMatrix();
         customShader.setMat4("view", viewMat);
 
-        Mat4 modelMat = Mat4::identityMatrix();
-        modelMat = translate(modelMat, model.centerVector);
+        Mat4 modelMat = model.getModelMatrix();
         customShader.setMat4("model", modelMat);
 
-        model.draw();
+        model.drawObject();
 
-        /* swap buffers */
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    /* optional: de allocate all resources once theyve outlived their purpose: */
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-
+    customShader.cleanup();
+    model.cleanup();
+    glfwDestroyWindow(window);
     /* terminate program, clearing all allocated glfw resources */
     glfwTerminate();
     return 0;
@@ -194,53 +177,92 @@ void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (camera.getCameraActive()) {
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            camera.processKeyboard(MovementDirections::FORWARD, deltaTime);
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            camera.processKeyboard(MovementDirections::BACKWARD, deltaTime);
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            camera.processKeyboard(MovementDirections::LEFT, deltaTime);
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            camera.processKeyboard(MovementDirections::RIGHT, deltaTime);
+        }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            camera.processKeyboard(MovementDirections::UP, deltaTime);
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            camera.processKeyboard(MovementDirections::DOWN, deltaTime);
+        }
+        if (pressKeyOnce(window, GLFW_KEY_R)) {
+            camera.toggleFreeCam();
+        }
     }
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    }
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    }
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        camera.ProcessKeyboard(RIGHT, deltaTime);
-    }
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-        camera.ProcessKeyboard(UP, deltaTime);
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-        camera.ProcessKeyboard(DOWN, deltaTime);
-    }
-    if (pressKeyOnce(window, GLFW_KEY_R)) {
-        camera.ToggleFreeCam();
+    else {
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            model.processKeyboard(MovementDirections::FORWARD, deltaTime);
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            model.processKeyboard(MovementDirections::BACKWARD, deltaTime);
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            model.processKeyboard(MovementDirections::LEFT, deltaTime);
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            model.processKeyboard(MovementDirections::RIGHT, deltaTime);
+        }
+        if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
+            model.processKeyboard(MovementDirections::UP, deltaTime);
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            model.processKeyboard(MovementDirections::DOWN, deltaTime);
+        }
     }
     if (pressKeyOnce(window, GLFW_KEY_1)) {
-        if (currentMode == VERTEXCOLOUR) {
-            switchRendermode(TEXTURE);
+        if (currentMode == RenderMode::VERTEXCOLOUR) {
+            switchRendermode(RenderMode::TEXTURE);
         }
         else {
-            switchRendermode(VERTEXCOLOUR);
+            switchRendermode(RenderMode::VERTEXCOLOUR);
         }
     }
     if (pressKeyOnce(window, GLFW_KEY_2)) {
-        switchRendermode(SINGLECOLOUR);
+        switchRendermode(RenderMode::SINGLECOLOUR);
     }
     if (pressKeyOnce(window, GLFW_KEY_3)) {
         renderWireframe = !renderWireframe;
+        if (renderWireframe) {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        }
+        else {
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        }
+    }
+    if (pressKeyOnce(window, GLFW_KEY_T)) {
+        // cameraMoveable = !cameraMoveable;
+        camera.toggleCameraActive();
+        if (camera.getCameraActive()) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        }
+        else {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+        }
     }
 }
 
 /* make sure viewport matches window dimensions after rezising */
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     (void)window;
+    SCR_WIDTH = width;
+    SCR_HEIGHT = height;
 
     glViewport(0, 0, width, height);
 }
 
 /* whenever mouse moves this callback is called */
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
-    (void)window;
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
@@ -257,7 +279,14 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     lastX = xpos;
     lastY = ypos;
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+    if (camera.getCameraActive()) {
+        camera.processMouseMovement(xoffset, yoffset);
+    }
+    else {
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            model.processMouseMovement(xoffset, yoffset, camera.getCameraVectors().up, camera.getCameraVectors().right);
+        }
+    }
 }
 
 /* whenever scroll wheel scrolls this callback is called */
@@ -265,6 +294,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     (void)window;
     (void)xoffset;
 
-    camera.ProcessMouseScroll(static_cast<float>(yoffset));
+    camera.processMouseScroll(static_cast<float>(yoffset));
 }
 

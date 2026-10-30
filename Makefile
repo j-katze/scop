@@ -2,7 +2,7 @@ NAME =		scop
 CXX =		c++
 
 SDIR =		./src/
-SFILES =	main.cpp vec3.cpp vec2.cpp mat4.cpp camera.cpp ObjModel.cpp BmpImage.cpp shader.cpp
+SFILES =	main.cpp vec3.cpp vec2.cpp mat4.cpp camera.cpp object.cpp obj_model.cpp bmp_image.cpp shader.cpp
 SRCS =		$(addprefix ${SDIR}, ${SFILES})
 
 GLAD =		./src/glad.c
@@ -29,7 +29,7 @@ IDIR =		./inc/
 #GLEW_LIB =	$(GLEW_PREFIX)/lib/libGLEW.a
 #GLEW_INC =	$(GLEW_PREFIX)/include
 
-CXXFLAGS =	-I $(IDIR) -Wall -Wextra -Werror -std=c++11
+CXXFLAGS =	-I $(IDIR) -Wall -Wextra -Werror -std=c++11 -g -O1
 
 LDLIBS =	-lglfw -lGL -ldl -lpthread -lm -lX11 -lXrandr -lXi -lXxf86vm -lwayland-client -lwayland-cursor
 

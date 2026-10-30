@@ -3,19 +3,19 @@
 #include <cmath>
 #include <stdexcept>
 
-Vec2& Vec2::operator+= (const Vec2& rhs) {
+Vec2& Vec2::operator+=(const Vec2& rhs) {
    x += rhs.x;
    y += rhs.y;
    return *this;
 }
 
-Vec2& Vec2::operator-= (const Vec2& rhs) {
+Vec2& Vec2::operator-=(const Vec2& rhs) {
     x -= rhs.x;
     y -= rhs.y;
     return *this;
 }
 
-float& Vec2::operator[] (int i) {
+float& Vec2::operator[](int i) {
     switch(i) {
         case 0: return x;
         case 1: return y;
@@ -23,7 +23,7 @@ float& Vec2::operator[] (int i) {
     }
 }
 
-const float& Vec2::operator[] (int i) const {
+const float& Vec2::operator[](int i) const {
     switch(i) {
         case 0: return x;
         case 1: return y;
@@ -39,31 +39,31 @@ bool Vec2::isZero() const {
     return x == 0.0f && y == 0.0f;
 }
 
-Vec2 operator+ (Vec2 lhs, const Vec2& rhs) {
+Vec2 operator+(Vec2 lhs, const Vec2& rhs) {
     return lhs += rhs;
 }
 
-Vec2 operator- (Vec2 lhs, const Vec2& rhs) {
+Vec2 operator-(Vec2 lhs, const Vec2& rhs) {
     return lhs -= rhs;
 }
 
-Vec2 operator* (const Vec2& v, const float& scalar) {
+Vec2 operator*(const Vec2& v, const float& scalar) {
     return {v.x * scalar, v.y * scalar};
 }
 
-Vec2 operator/ (const Vec2& v, const float& scalar) {
+Vec2 operator/(const Vec2& v, const float& scalar) {
     return {v.x / scalar, v.y / scalar};
 }
 
-float cross (const Vec2& a, const Vec2& b) {
+float cross(const Vec2& a, const Vec2& b) {
     return a.x * b.y - a.y * b.x;
 }
 
-float dot (const Vec2& a, const Vec2& b) {
+float dot(const Vec2& a, const Vec2& b) {
     return a.x * b.x + a.y * b.y;
 }
 
-Vec2 normalize (Vec2 v) {
+Vec2 normalize(Vec2 v) {
     if (v.length() == 0.0f) {
         return {0.0f, 0.0f};
     }

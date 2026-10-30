@@ -51,35 +51,46 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
     checkCompileErrors(fragment, "FRAGMENT");
 
     /* shader program */
-    ID = glCreateProgram();
-    glAttachShader(ID, vertex);
-    glAttachShader(ID, fragment);
-    glLinkProgram(ID);
-    checkCompileErrors(ID, "PROGRAM");
+    ID_ = glCreateProgram();
+    glAttachShader(ID_, vertex);
+    glAttachShader(ID_, fragment);
+    glLinkProgram(ID_);
+    checkCompileErrors(ID_, "PROGRAM");
 
     /* delete the shaders as theyre no longer needed after linking */
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 }
 
+Shader::~Shader() {
+    cleanup();
+}
+
 void Shader::use() {
-    glUseProgram(ID);
+    glUseProgram(ID_);
+}
+
+void Shader::cleanup() {
+    if (ID_ != 0) {
+        glDeleteProgram(ID_);
+        ID_ = 0;
+    }
 }
 
 void Shader::setBool(const std::string &name, bool value) const {
-    glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+    glUniform1i(glGetUniformLocation(ID_, name.c_str()), (int)value);
 }
 
 void Shader::setInt(const std::string &name, int value) const {
-    glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+    glUniform1i(glGetUniformLocation(ID_, name.c_str()), value);
 }
 
 void Shader::setFloat(const std::string &name, float value) const {
-    glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
+    glUniform1f(glGetUniformLocation(ID_, name.c_str()), value);
 }
 
 void Shader::setMat4(const std::string &name, const Mat4 &mat) const {
-    glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()), 1, GL_FALSE, mat.data());
+    glUniformMatrix4fv(glGetUniformLocation(ID_, name.c_str()), 1, GL_FALSE, mat.data());
 }
 
 void Shader::checkCompileErrors(unsigned int shader, std::string type) {
@@ -88,7 +99,7 @@ void Shader::checkCompileErrors(unsigned int shader, std::string type) {
     if (type != "PROGRAM") {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if (!success) {
-            glGetProgramInfoLog(shader, 1024, NULL, infoLog);
+            glGetShaderInfoLog(shader, 1024, NULL, infoLog);
             std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog <<
             "\n -- --------------------------------------------------- -- " << std::endl;
         }

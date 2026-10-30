@@ -1,4 +1,5 @@
-#pragma once
+#ifndef BMP_IMAGE_HPP
+#define BMP_IMAGE_HPP
 
 #include <cstdint>
 #include <string>
@@ -6,19 +7,12 @@
 
 class BmpImage {
 public:
-    unsigned int textureID;
-
     struct Image {
         int width = 0;
         int height = 0;
         std::vector<std::uint8_t> rgb;
     };
 
-    Image image;
-
-    bool loadTexture(const std::string& path);
-
-private:
     struct FileHeader {
         uint16_t signature;
 
@@ -48,11 +42,29 @@ private:
         uint32_t importantColours;
     };
 
-    FileHeader fileHeader;
-    InfoHeader infoHeader;
+    BmpImage() = default;
+    ~BmpImage();
+    BmpImage(const BmpImage&) = delete;
+    BmpImage& operator=(const BmpImage&) = delete;
+
+    const unsigned int& getTextureId() const;
+
+    void cleanup();
+
+    bool loadTexture(const std::string& path);
+
+private:
+    unsigned int textureID_;
+    Image        image_;
+
+    FileHeader fileHeader_;
+    InfoHeader infoHeader_;
 
     bool loadFile(const std::string& path);
+
     bool readU16(std::ifstream& file, uint16_t& value);
     bool readU32(std::ifstream& file, uint32_t& value);
     bool readI32(std::ifstream& file, int32_t& value);
 };
+
+#endif

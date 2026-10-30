@@ -1,20 +1,41 @@
-#pragma once
-
-#ifndef ObjModel_hpp
-#define ObjModel_hpp
+#ifndef OBJ_MODEL_HPP
+#define OBJ_MODEL_HPP
 
 #include "../include/glad/glad.h"
+
+#include "vec3.hpp"
+#include "vec2.hpp"
 
 #include <cstddef>
 #include <string>
 #include <vector>
 #include <cstdlib>
 
-#include "vec3.hpp"
-#include "vec2.hpp"
-
 class ObjModel {
 public:
+    ObjModel() = default;
+    ~ObjModel();
+
+    ObjModel(const ObjModel&) = delete;
+    ObjModel& operator=(const ObjModel&) = delete;
+
+    const unsigned int& getVAO() const;
+    const unsigned int& getVBO() const;
+    const GLsizei& getVertexCount() const;
+
+    /* delete models vao and vbo */
+    void cleanup();
+
+    /* loads model from .obj file */
+    bool load(const std::string& path);
+
+    /* draw the model */
+    // void draw() const;
+
+    /* default cube in case no object was loaded */
+    void defaultCube();
+
+private:
     struct Vertex {
         Vec3 position;
         Vec3 normal;
@@ -22,29 +43,9 @@ public:
         Vec3 colour;
     };
 
-    Vec3 centerVector;
-
-    ObjModel() = default;
-    ~ObjModel() { destroy(); }
-
-    ObjModel(const ObjModel&) = delete;
-    ObjModel& operator=(const ObjModel&) = delete;
-
-    /* loads model from .obj file */
-    bool load(const std::string& path);
-
-    /* draw the model */
-    void draw() const;
-
-    /* default cube in case no object was loaded */
-    void defaultCube();
-
-private:
-    unsigned int VAO_, VBO_;
+    unsigned int VAO_, VBO_ = 0;
     GLsizei vertexCount_ = 0;
-
-    /* delete models vao and vbo */
-    void destroy();
+    Vec3 centerVector_;
 
     /* extract position, texture coordinate and normal from a face */
     static bool parseFaceVertex(const std::string& token, int& position, int& texcoord, int& normal);
@@ -74,4 +75,3 @@ private:
 };
 
 #endif
-

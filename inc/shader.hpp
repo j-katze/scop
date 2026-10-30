@@ -1,7 +1,5 @@
-#pragma once
-
-#ifndef shader_hpp
-#define shader_hpp
+#ifndef SHADER_HPP
+#define SHADER_HPP
 
 #include "../include/glad/glad.h"
 #include "mat4.hpp"
@@ -10,14 +8,15 @@
 
 class Shader {
 public:
-    /* program id */
-    unsigned int ID;
-
-    /* retreive source code */
     Shader(const char* vertexPath, const char* fragmentPath);
+    ~Shader();
+    Shader(const Shader&) = delete;
+    Shader& operator=(const Shader&) = delete;
 
     /* activate the shader */
     void use();
+
+    void cleanup();
 
     /* utility uniform functions */
     void setBool(const std::string &name, bool value) const;
@@ -26,9 +25,10 @@ public:
     void setMat4(const std::string &name, const Mat4 &mat) const;
 
 private:
+    unsigned int ID_;
+
     /* checking shader compile errors */
     void checkCompileErrors(unsigned int shader, std::string type);
 };
 
 #endif
-
