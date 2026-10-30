@@ -28,6 +28,7 @@ int SCR_HEIGHT = 600;
 //             X     Y     Z
 Camera camera({0.0f, 0.0f, 10.0f});
 Object model;
+Object model2;
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -45,7 +46,6 @@ enum class RenderMode {
 RenderMode currentMode = RenderMode::VERTEXCOLOUR;
 RenderMode nextMode = RenderMode::VERTEXCOLOUR;
 float blendAmount = 1.0f;
-const float transitionDuration = 1.0f;
 
 bool renderWireframe = false;
 
@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
     glEnable(GL_DEPTH_TEST);
 
     /*loading shader */
-    Shader customShader("shaders/vertex.vert", "shaders/fragment.frag");
+    Shader shader("shaders/vertex.vert", "shaders/fragment.frag");
 
     const bool modelLoaded = argc > 1 && model.loadModel(argv[1]);
     const bool textureLoaded = argc > 2 && model.loadTexture(argv[2]);
@@ -95,6 +95,7 @@ int main(int argc, char* argv[]) {
     if (!textureLoaded) {
         std::cerr << "no texture supplied" << std::endl;
     }
+    model2.loadDefaultCube();
 
     /* render loop */
     while (!glfwWindowShouldClose(window)) {
@@ -113,40 +114,38 @@ int main(int argc, char* argv[]) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         /* activate the shader */
-        customShader.use();
+        shader.use();
 
         /* blend between render modes if mode was switched */
         if (blendAmount < 1.0f) {
-            blendAmount += deltaTime * transitionDuration;
-            if (blendAmount >= 1.0f) {
+            blendAmount = smoothlerp(blendAmount, 1.0f, 4.0f, deltaTime);
+            if (std::abs(blendAmount - 1.0f) < 0.01f) {
                 blendAmount = 1.0f;
                 currentMode = nextMode;
             }
         }
 
-        customShader.setInt("currentMode", static_cast<int>(currentMode));
-        customShader.setInt("nextMode", static_cast<int>(nextMode));
-        customShader.setFloat("blendAmount", blendAmount);
+        shader.setInt("currentMode", static_cast<int>(currentMode));
+        shader.setInt("nextMode", static_cast<int>(nextMode));
+        shader.setFloat("blendAmount", blendAmount);
 
         /* pass projection matrix to shader */
         Mat4 projectionMat = camera.getPerspectiveMatrix((float)SCR_WIDTH, (float)SCR_HEIGHT);
-        customShader.setMat4("projection", projectionMat);
+        shader.setMat4("projection", projectionMat);
 
         /* camera / view transformations */
         Mat4 viewMat = camera.getViewMatrix();
-        customShader.setMat4("view", viewMat);
+        shader.setMat4("view", viewMat);
 
-        Mat4 modelMat = model.getModelMatrix();
-        customShader.setMat4("model", modelMat);
-
-        model.drawObject();
+        model.update(shader, deltaTime);
+        model2.update(shader, deltaTime);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-    customShader.cleanup();
-    model.cleanup();
+    shader.destroy();
+    model.destroy();
     glfwDestroyWindow(window);
     /* terminate program, clearing all allocated glfw resources */
     glfwTerminate();
@@ -294,6 +293,11 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     (void)window;
     (void)xoffset;
 
-    camera.processMouseScroll(static_cast<float>(yoffset));
+    if (camera.getCameraActive()) {
+        camera.processMouseScroll(yoffset);
+    }
+    else {
+        model.processMouseScroll(yoffset);
+    }
 }
 

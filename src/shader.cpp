@@ -63,14 +63,14 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
 }
 
 Shader::~Shader() {
-    cleanup();
+    destroy();
 }
 
 void Shader::use() {
     glUseProgram(ID_);
 }
 
-void Shader::cleanup() {
+void Shader::destroy() {
     if (ID_ != 0) {
         glDeleteProgram(ID_);
         ID_ = 0;

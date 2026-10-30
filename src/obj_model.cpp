@@ -7,7 +7,7 @@
 #include <random>
 
 ObjModel::~ObjModel() {
-    cleanup();
+    destroy();
 }
 
 const unsigned int& ObjModel::getVAO() const {
@@ -22,7 +22,7 @@ const GLsizei& ObjModel::getVertexCount() const {
     return vertexCount_;
 }
 
-void ObjModel::cleanup() {
+void ObjModel::destroy() {
     if (VBO_ != 0) {
         glDeleteBuffers(1, &VBO_);
     }
@@ -43,7 +43,7 @@ bool ObjModel::load(const std::string& path) {
     }
 
     /* destroy previous model when loading new one */
-    cleanup();
+    destroy();
 
     std::vector<float> positions;
     std::vector<float> texcoords;
@@ -237,7 +237,7 @@ bool ObjModel::load(const std::string& path) {
 }
 
 void ObjModel::defaultCube() {
-    cleanup();
+    destroy();
     std::cout << "No model provided, using default cube." << std::endl;
     float vertices[] = {
         -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 0.0f,

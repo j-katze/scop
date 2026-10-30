@@ -219,16 +219,6 @@ void Camera::printState(void) {
         << "\033[19A"  << std::flush;
 }
 
-/* convert degrees to radians */
-float Camera::radians(float degrees) {
-    return degrees * 3.14159265358979323846f / 180.0f;
-}
-
-/* convert radians to degrees */
-float Camera::degrees(float radians) {
-    return radians * 180.0f / 3.14159265358979323846f;
-}
-
 /* calculates the front vector from the Camera's (updated) Euler Angles */
 void Camera::updateCameraVectors() {
     Vec3 front;
@@ -257,10 +247,4 @@ void Camera::updateOrbitCamera() {
     front_ = normalize(target_ - position_);
     right_ = normalize(cross(front_, worldUp_));
     up_ = normalize(cross(right_, front_));
-}
-
-float Camera::smoothlerp(float a, float b, float decay, float dt) {
-    /* exponential decay lerp */
-    /* exponential decay constant useful range approx. 1 to 25, from slow to fast */
-    return b+(a-b)*exp(-decay * dt);
 }

@@ -93,16 +93,8 @@ private:
     float      snapYawDelta1_;
     float      snapYawDelta2_;
 
-    /* convert degrees to radians */
-    static float radians(float degrees);
-
-    /* convert radians to degrees */
-    static float degrees(float radians);
-
     /* calculates the front vector from the Camera's (updated) Euler Angles */
     void updateCameraVectors();
     void updateOrbitCamera();
-
-    static float smoothlerp(float a, float b, float decay, float dt);
 };
 #endif

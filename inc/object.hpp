@@ -5,6 +5,7 @@
 #include "mat4.hpp"
 #include "obj_model.hpp"
 #include "bmp_image.hpp"
+#include "shader.hpp"
 
 enum class MovementDirections {
     FORWARD,
@@ -23,28 +24,33 @@ public:
     const BmpImage& getBmpTexture() const;
     Mat4 getModelMatrix() const;
 
-    void cleanup();
+    void destroy();
 
     bool loadModel(const std::string& path);
     void loadDefaultCube();
 
     bool loadTexture(const std::string& path);
 
-    void drawObject();
+    void update(const Shader& shader, float deltaTime);
 
     void processKeyboard(MovementDirections direction, float deltaTime);
     void processMouseMovement(float xoffset, float yoffset, Vec3 cameraUp, Vec3 cameraRight);
+    void processMouseScroll(float yoffset);
 
 private:
     ObjModel objModel_;
     BmpImage texture_;
 
     Vec3     position_;
+    Mat4     orientation_;
+    Vec3     scale_;
+
+    Vec3     targetScale_;
+
     Vec3     front_;
     Vec3     up_;
     Vec3     right_;
 
-    Mat4     orientation_;
 
     Vec3     worldForward_;
     Vec3     worldUp_;
@@ -53,13 +59,16 @@ private:
     float    movementSpeed_;
     float    mouseSensitivity_;
 
-    /* convert degrees to radians */
-    static float radians(float degrees);
-
-    /* convert radians to degrees */
-    static float degrees(float radians);
-
     void updateModelVectors();
 };
+
+/* convert degrees to radians */
+float radians(float degrees);
+
+/* convert radians to degrees */
+float degrees(float radians);
+
+/* framerate independent linear interpolation */
+float smoothlerp(float a, float b, float decay, float dt);
 
 #endif

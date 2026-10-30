@@ -11,9 +11,13 @@ uniform int nextMode;
 uniform float blendAmount;
 
 vec3 getModeColour(int mode) {
-    if (mode == 1) return VertexColour;
-    if (mode == 2) return texture(texture1, TexCoord).rgb;
-    return vec3(0.7f);
+    if (mode == 1) {
+        return VertexColour;
+    }
+    if (mode == 2) {
+        return texture(texture1, TexCoord).rgb;
+    }
+    return vec3(0.7f); // light grey
 }
 
 void main()

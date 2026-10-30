@@ -24,7 +24,7 @@ public:
     const GLsizei& getVertexCount() const;
 
     /* delete models vao and vbo */
-    void cleanup();
+    void destroy();
 
     /* loads model from .obj file */
     bool load(const std::string& path);

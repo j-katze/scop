@@ -49,7 +49,7 @@ public:
 
     const unsigned int& getTextureId() const;
 
-    void cleanup();
+    void destroy();
 
     bool loadTexture(const std::string& path);
 

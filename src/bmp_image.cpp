@@ -8,14 +8,14 @@
 #include <limits>
 
 BmpImage::~BmpImage() {
-    cleanup();
+    destroy();
 }
 
 const unsigned int& BmpImage::getTextureId() const {
     return textureID_;
 }
 
-void BmpImage::cleanup() {
+void BmpImage::destroy() {
     if (textureID_ != 0) {
         glDeleteTextures(1, &textureID_);
         textureID_ = 0;
