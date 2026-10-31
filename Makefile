@@ -2,7 +2,7 @@ NAME =		scop
 CXX =		c++
 
 SDIR =		./src/
-SFILES =	main.cpp vec3.cpp vec2.cpp mat4.cpp camera.cpp object.cpp obj_model.cpp bmp_image.cpp shader.cpp
+SFILES =	main.cpp vec3.cpp vec2.cpp mat4.cpp camera.cpp object.cpp obj_model.cpp bmp_image.cpp mtl_material.cpp shader.cpp
 SRCS =		$(addprefix ${SDIR}, ${SFILES})
 
 GLAD =		./src/glad.c

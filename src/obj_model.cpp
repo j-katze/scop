@@ -44,6 +44,13 @@ bool ObjModel::load(const std::string& path) {
 
     /* destroy previous model when loading new one */
     destroy();
+    materials_.clear();
+
+    const MtlMaterial defaultMaterial;
+    MtlMaterial currentMaterial = defaultMaterial;
+
+    const size_t slash = path.find_last_of("/\\");
+    const std::string objDirecory = (slash == std::string::npos) ? "" : path.substr(0, slash + 1);
 
     std::vector<float> positions;
     std::vector<float> texcoords;
@@ -58,7 +65,7 @@ bool ObjModel::load(const std::string& path) {
         std::string type;
         stream >> type;
 
-        if (type.empty() || type[0] == '#') {
+        if (type.empty() || type[0] == '#' || type == "vp" || type == "l" || type == "s") {
             continue;
         }
 
@@ -135,6 +142,9 @@ bool ObjModel::load(const std::string& path) {
                 if (normalIndex != 0) {
                     storeVec3(normals, normalIndex, vertex.normal);
                 }
+
+                vertex.materialColour = currentMaterial.getDiffuseColour();
+
                 /* adding the vertex to the face */
                 face.push_back(vertex);
             }
@@ -176,6 +186,35 @@ bool ObjModel::load(const std::string& path) {
                 vertices.push_back(a);
                 vertices.push_back(b);
                 vertices.push_back(c);
+            }
+        }
+
+        else if (type == "mtllib") {
+            std::string mtlFilename;
+
+            while (stream >> mtlFilename) {
+                const std::string mtlPath = objDirecory + mtlFilename;
+
+                if (!MtlMaterial::load(mtlPath, materials_)) {
+                    std::cerr << "Could not open MTL file: " << mtlPath << std::endl;
+                }
+            }
+
+        }
+
+        else if (type == "usemtl") {
+            std::string materialName;
+
+            if (stream >> materialName) {
+                const std::map<std::string, MtlMaterial>::iterator it = materials_.find(materialName);
+
+                if (it != materials_.end()) {
+                    currentMaterial = it->second;
+                }
+                else {
+                    std::cerr << "Material not found:" << materialName << "; using default material." << std::endl;
+                    currentMaterial = defaultMaterial;
+                }
             }
         }
     }
@@ -231,6 +270,10 @@ bool ObjModel::load(const std::string& path) {
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
                           sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, colour)));
     glEnableVertexAttribArray(3);
+
+    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE,
+                          sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, materialColour)));
+    glEnableVertexAttribArray(4);
 
     glBindVertexArray(0);
     return true;

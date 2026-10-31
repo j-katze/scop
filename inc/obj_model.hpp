@@ -5,14 +5,25 @@
 
 #include "vec3.hpp"
 #include "vec2.hpp"
+#include "mtl_material.hpp"
 
 #include <cstddef>
 #include <string>
 #include <vector>
+#include <map>
 #include <cstdlib>
 
 class ObjModel {
 public:
+    struct Vertex {
+        Vec3 position;
+        Vec3 normal;
+        Vec2 uv;
+        Vec3 colour;
+        /* attributes loaded from .mtl file */
+        Vec3 materialColour;
+    };
+
     ObjModel() = default;
     ~ObjModel();
 
@@ -36,12 +47,8 @@ public:
     void defaultCube();
 
 private:
-    struct Vertex {
-        Vec3 position;
-        Vec3 normal;
-        Vec2 uv;
-        Vec3 colour;
-    };
+    std::string name_;
+    std::map<std::string, MtlMaterial> materials_;
 
     unsigned int VAO_, VBO_ = 0;
     GLsizei vertexCount_ = 0;
