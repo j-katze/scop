@@ -2,6 +2,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 MtlMaterial::MtlMaterial()
     :   ambientColour_{0.0f, 0.0f, 0.0f},
@@ -77,6 +78,7 @@ bool MtlMaterial::load(const std::string &path, std::map<std::string, MtlMateria
 
             if (current != nullptr) {
                 parsedMaterials[currentName] = *current;
+                std::cout << "loaded material: " << currentName << " from: " << path << std::endl;
             }
 
             currentName = name;
@@ -175,9 +177,10 @@ bool MtlMaterial::load(const std::string &path, std::map<std::string, MtlMateria
 
     if (current != nullptr) {
         parsedMaterials[currentName] = *current;
+        std::cout << "loaded material: " << currentName << " from: " << path << std::endl;
     }
 
-    for (const auto& entry : parsedMaterials) {
+    for (const std::pair<const std::string, MtlMaterial>& entry : parsedMaterials) {
         materials[entry.first] = entry.second;
     }
 

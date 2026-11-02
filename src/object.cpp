@@ -51,10 +51,17 @@ bool Object::loadModel(const std::string &path) {
 
 void Object::loadDefaultCube() {
     objModel_.defaultCube();
+    if (texture_.isImageDataEmpty()) {
+        texture_.loadDefaultTexture();
+    }
 }
 
 bool Object::loadTexture(const std::string &path) {
     return texture_.loadTexture(path);
+}
+
+void Object::loadDefaultTexture() {
+    texture_.loadDefaultTexture();
 }
 
 void Object::update(const Shader& shader, float deltaTime) {

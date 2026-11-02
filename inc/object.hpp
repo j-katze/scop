@@ -30,6 +30,7 @@ public:
     void loadDefaultCube();
 
     bool loadTexture(const std::string& path);
+    void loadDefaultTexture();
 
     void update(const Shader& shader, float deltaTime);
 

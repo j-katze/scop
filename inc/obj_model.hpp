@@ -24,7 +24,7 @@ public:
         Vec3 materialColour;
     };
 
-    ObjModel() = default;
+    ObjModel();
     ~ObjModel();
 
     ObjModel(const ObjModel&) = delete;
@@ -32,7 +32,7 @@ public:
 
     const unsigned int& getVAO() const;
     const unsigned int& getVBO() const;
-    const GLsizei& getVertexCount() const;
+    const GLsizei&      getVertexCount() const;
 
     /* delete models vao and vbo */
     void destroy();
@@ -47,12 +47,22 @@ public:
     void defaultCube();
 
 private:
-    std::string name_;
+    std::string                        name_;
     std::map<std::string, MtlMaterial> materials_;
+    std::vector<Vertex>                vertices_;
 
-    unsigned int VAO_, VBO_ = 0;
-    GLsizei vertexCount_ = 0;
-    Vec3 centerVector_;
+    unsigned int                       VAO_;
+    unsigned int                       VBO_;
+    GLsizei                            vertexCount_;
+    Vec3                               centerVector_;
+
+    void uploadMeshToGpu();
+
+    void addCubeFace(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3&d,
+                     const Vec3& normal,
+                     const Vec3& vertexColourA, const Vec3& vertexColourB,
+                     const Vec3& vertexColourC, const Vec3& vertexColourD,
+                     const Vec3& materialColour);
 
     /* extract position, texture coordinate and normal from a face */
     static bool parseFaceVertex(const std::string& token, int& position, int& texcoord, int& normal);

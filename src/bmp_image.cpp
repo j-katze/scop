@@ -7,12 +7,23 @@
 #include <iostream>
 #include <limits>
 
+BmpImage::BmpImage()
+    :   textureID_(0),
+        image_{},
+        fileHeader_{},
+        infoHeader_{}
+{}
+
 BmpImage::~BmpImage() {
     destroy();
 }
 
 const unsigned int& BmpImage::getTextureId() const {
     return textureID_;
+}
+
+bool BmpImage::isImageDataEmpty() const {
+    return image_.rgb.empty();
 }
 
 void BmpImage::destroy() {
@@ -22,34 +33,7 @@ void BmpImage::destroy() {
     }
 }
 
-bool BmpImage::loadTexture(const std::string &path) {
-    if (!loadFile(path)) {
-        return false;
-    }
-
-    glGenTextures(1, &textureID_);
-    glBindTexture(GL_TEXTURE_2D, textureID_);
-
-    /* set texture wrapping parameters */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    /* set texture filtering parameters */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_.width, image_.height, 0,
-                 GL_RGB, GL_UNSIGNED_BYTE, image_.rgb.data());
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    return 1;
-}
-
-bool BmpImage::loadFile(const std::string& path) {
+bool BmpImage::loadTexture(const std::string& path) {
     std::ifstream file(path, std::ios::binary);
     if (!file) {
         std::cerr << "Could not open file" << path << std::endl;
@@ -163,7 +147,7 @@ bool BmpImage::loadFile(const std::string& path) {
         /* pixels are stored in BGR order, reorder them to RGB */
         for (int x = 0; x < infoHeader_.width; ++x) {
             /* read pixels in reverse order otherwise the image will be flipped */
-            const size_t src = static_cast<size_t>(infoHeader_.width - 1 - x) * (infoHeader_.bitsPerPixel / 8);
+            const size_t src = static_cast<size_t>(x) * (infoHeader_.bitsPerPixel / 8);
             const size_t dst =
                 (static_cast<size_t>(outputRow) * infoHeader_.width + x) * (infoHeader_.bitsPerPixel / 8);
 
@@ -173,7 +157,44 @@ bool BmpImage::loadFile(const std::string& path) {
         }
     }
 
+    std::cout << "loaded texture from: " << path << std::endl;
+
+    uploadImageToGPU();
+
     return true;
+}
+
+void BmpImage::loadDefaultTexture() {
+    std::cout << "No texture provided, using default pink texture." << std::endl;
+
+    image_.width = 1;
+    image_.height = 1;
+    image_.rgb = {255, 0, 255};
+
+    uploadImageToGPU();
+}
+
+bool BmpImage::uploadImageToGPU() {
+    glGenTextures(1, &textureID_);
+    glBindTexture(GL_TEXTURE_2D, textureID_);
+
+    /* set texture wrapping parameters */
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    /* set texture filtering parameters */
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_.width, image_.height, 0,
+                 GL_RGB, GL_UNSIGNED_BYTE, image_.rgb.data());
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    return 1;
 }
 
 /* read 2 bytes from file and store them in a uint16_t */

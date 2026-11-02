@@ -6,6 +6,14 @@
 #include <algorithm>
 #include <random>
 
+ObjModel::ObjModel()
+    :   name_("ObjModel"),
+        VAO_(0),
+        VBO_(0),
+        vertexCount_(0),
+        centerVector_{}
+{}
+
 ObjModel::~ObjModel() {
     destroy();
 }
@@ -45,6 +53,7 @@ bool ObjModel::load(const std::string& path) {
     /* destroy previous model when loading new one */
     destroy();
     materials_.clear();
+    vertices_.clear();
 
     const MtlMaterial defaultMaterial;
     MtlMaterial currentMaterial = defaultMaterial;
@@ -55,7 +64,6 @@ bool ObjModel::load(const std::string& path) {
     std::vector<float> positions;
     std::vector<float> texcoords;
     std::vector<float> normals;
-    std::vector<Vertex> vertices;
     bool hasUVs = false;
 
     std::string line;
@@ -69,10 +77,17 @@ bool ObjModel::load(const std::string& path) {
             continue;
         }
 
+        if (type == "o") {
+            std::string name;
+            if (stream >> name) {
+                name_ = name;
+            }
+        }
+
         /* v = vertex */
         /* vertices have x, y, z, w values e.g.: v 0.123 0.234 0.345 1.0 */
         /* w is optional and controls the scale of the vertex, this program igonores it */
-        if (type == "v") {
+        else if (type == "v") {
             float x, y, z;
 
             if (stream >> x >> y >> z) {
@@ -183,9 +198,9 @@ bool ObjModel::load(const std::string& path) {
 
                 assignRandomTriangleColour(a, b, c);
 
-                vertices.push_back(a);
-                vertices.push_back(b);
-                vertices.push_back(c);
+                vertices_.push_back(a);
+                vertices_.push_back(b);
+                vertices_.push_back(c);
             }
         }
 
@@ -220,23 +235,100 @@ bool ObjModel::load(const std::string& path) {
     }
 
     /* error in case no valid faces could be created */
-    if (vertices.empty()) {
+    if (vertices_.empty()) {
         std::cerr << "OBJ contains no useable faces: " << path << std::endl;
         return false;
     }
 
     if (!hasUVs) {
-        generatePlanarUVs(vertices);
+        generatePlanarUVs(vertices_);
     }
 
-    centerVector_ = centerObject(vertices);
+    centerVector_ = centerObject(vertices_);
 
-    for (Vertex& vertex : vertices) {
+    for (Vertex& vertex : vertices_) {
         vertex.position += centerVector_;
     }
 
-    vertexCount_ = static_cast<GLsizei>(vertices.size());
+    vertexCount_ = static_cast<GLsizei>(vertices_.size());
 
+    std::cout << "loaded ObjModel: " << name_ << " from: " << path << std::endl;
+
+    uploadMeshToGpu();
+
+    return true;
+}
+
+void ObjModel::defaultCube() {
+    destroy();
+    materials_.clear();
+    vertices_.clear();
+
+    std::cout << "No model provided, using default cube." << std::endl;
+
+    const MtlMaterial defaultMaterial;
+
+    //   E-----F
+    //  /|    /|
+    // A-----B |
+    // | H---|-G
+    // |/    |/
+    // D-----C
+
+    /* positions */
+    const Vec3 posA   {-0.5f,  0.5f,  0.5f};
+    const Vec3 posB   { 0.5f,  0.5f,  0.5f};
+    const Vec3 posC   { 0.5f, -0.5f,  0.5f};
+    const Vec3 posD   {-0.5f, -0.5f,  0.5f};
+
+    const Vec3 posE   {-0.5f,  0.5f, -0.5f};
+    const Vec3 posF   { 0.5f,  0.5f, -0.5f};
+    const Vec3 posG   { 0.5f, -0.5f, -0.5f};
+    const Vec3 posH   {-0.5f, -0.5f, -0.5f};
+
+    /* normals */
+    const Vec3 front  { 0.0f,  0.0f,  1.0f};
+    const Vec3 back   { 0.0f,  0.0f, -1.0f};
+    const Vec3 left   {-1.0f,  0.0f,  0.0f};
+    const Vec3 right  { 1.0f,  0.0f,  0.0f};
+    const Vec3 top    { 0.0f,  1.0f,  0.0f};
+    const Vec3 bottom { 0.0f, -1.0f,  0.0f};
+
+    /* vertex colours */
+    const Vec3 rgbA   { 0.0f,  1.0f,  1.0f}; // cyan
+    const Vec3 rgbB   { 1.0f,  1.0f,  1.0f}; // white
+    const Vec3 rgbC   { 1.0f,  0.0f,  1.0f}; // magenta
+    const Vec3 rgbD   { 0.0f,  0.0f,  1.0f}; // blue
+
+    const Vec3 rgbE   { 0.0f,  1.0f,  0.0f}; // green
+    const Vec3 rgbF   { 1.0f,  1.0f,  0.0f}; // yellow
+    const Vec3 rgbG   { 1.0f,  0.0f,  0.0f}; // red
+    const Vec3 rgbH   { 0.0f,  0.0f,  0.0f}; // black
+
+    /* front */
+    addCubeFace(posA, posB, posC, posD, front,  rgbD, rgbC, rgbB, rgbA, defaultMaterial.getDiffuseColour());
+
+    /* back */
+    addCubeFace(posE, posF, posG, posH, back,   rgbE, rgbF, rgbG, rgbH, defaultMaterial.getDiffuseColour());
+
+    /* left */
+    addCubeFace(posA, posE, posH, posD, left,   rgbA, rgbE, rgbH, rgbD, defaultMaterial.getDiffuseColour());
+
+    /* right */
+    addCubeFace(posF, posB, posC, posG, right,  rgbF, rgbB, rgbC, rgbG, defaultMaterial.getDiffuseColour());
+
+    /* top */
+    addCubeFace(posA, posB, posF, posE, top,    rgbA, rgbB, rgbF, rgbE, defaultMaterial.getDiffuseColour());
+
+    /* bottom */
+    addCubeFace(posH, posG, posC, posD, bottom, rgbH, rgbG, rgbC, rgbD, defaultMaterial.getDiffuseColour());
+
+    vertexCount_ = 36;
+
+    uploadMeshToGpu();
+}
+
+void ObjModel::uploadMeshToGpu() {
     /* creating vertex array and buffer */
     glGenVertexArrays(1, &VAO_);
     glGenBuffers(1, &VBO_);
@@ -247,8 +339,8 @@ bool ObjModel::load(const std::string& path) {
 
     /* copying the vertices from the cpu to the gpu */
     glBufferData(GL_ARRAY_BUFFER,
-                 static_cast<GLsizeiptr>(vertices.size() * sizeof(Vertex)),
-                 vertices.data(),
+                 static_cast<GLsizeiptr>(vertices_.size() * sizeof(Vertex)),
+                 vertices_.data(),
                  GL_STATIC_DRAW);
 
     /* configuring attribute location 0 as position */
@@ -276,82 +368,39 @@ bool ObjModel::load(const std::string& path) {
     glEnableVertexAttribArray(4);
 
     glBindVertexArray(0);
-    return true;
+
 }
 
-void ObjModel::defaultCube() {
-    destroy();
-    std::cout << "No model provided, using default cube." << std::endl;
-    float vertices[] = {
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,     1.0f, 0.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     1.0f, 1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     1.0f, 1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 0.0f,
+void ObjModel::addCubeFace(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3&d,
+                           const Vec3& normal,
+                           const Vec3& vertexColourA, const Vec3& vertexColourB,
+                           const Vec3& vertexColourC, const Vec3& vertexColourD,
+                           const Vec3& materialColour) {
+    /* cube side is two triangles */
+    // a------b
+    // |\     |
+    // |  \   |
+    // |    \ |
+    // d------c
 
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,     1.0f, 1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,     1.0f, 1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,     0.0f, 1.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 1.0f,
+    /* uv coordinate */
+    // 0/1---1/1
+    //  |     |
+    //  |     |
+    // 0/0---1/0
 
-        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     0.0f, 1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     0.0f, 1.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 0.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     0.0f, 1.0f, 1.0f,
+    const Vec2 uvA{0.0f, 1.0f};
+    const Vec2 uvB{1.0f, 1.0f};
+    const Vec2 uvC{1.0f, 0.0f};
+    const Vec2 uvD{0.0f, 0.0f};
 
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     1.0f, 1.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     1.0f, 0.0f, 0.0f, 
-         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     1.0f, 0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     1.0f, 0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 1.0f, 1.0f,
+    vertices_.push_back({a, normal, uvA, vertexColourA, materialColour});
+    vertices_.push_back({b, normal, uvB, vertexColourB, materialColour});
+    vertices_.push_back({c, normal, uvC, vertexColourC, materialColour});
 
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 1.0f,     1.0f, 0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,     0.0f, 0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 0.0f, 0.0f,
-
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,     1.0f, 1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,     1.0f, 1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,     0.0f, 1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,     0.0f, 1.0f, 0.0f
-    };
-
-    glGenVertexArrays(1, &VAO_);
-    glGenBuffers(1, &VBO_);
-
-    glBindVertexArray(VAO_);
-
-    /* copy vertex array to buffer for opengl to use */
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    /* set the vertex attribute pointer */
-    /* position */
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    /* texture coordinate */
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    /* colour */
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
-    glEnableVertexAttribArray(3);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    vertexCount_ = 36;
+    vertices_.push_back({a, normal, uvA, vertexColourA, materialColour});
+    vertices_.push_back({c, normal, uvC, vertexColourC, materialColour});
+    vertices_.push_back({d, normal, uvD, vertexColourD, materialColour});
 }
 
 bool ObjModel::parseFaceVertex(const std::string& token, int& position, int& texcoord, int& normal) {
@@ -544,6 +593,13 @@ void ObjModel::generatePlanarUVs(std::vector<Vertex>& vertices) {
         }
         else {
             vertex.uv[1] = 0.0f;
+        }
+
+        if (uAxis == 2 && range[uAxis] > 0.0f) {
+            vertex.uv[0] = 1.0f - vertex.uv[0];
+        }
+        if (vAxis == 2 && range[vAxis] > 0.0f) {
+            vertex.uv[1] = 1.0f - vertex.uv[1];
         }
     }
 }

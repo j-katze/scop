@@ -13,10 +13,16 @@ Camera::Camera(Vec3 position, Vec3 up, float yaw, float pitch)
         pitch_(pitch),
         movementSpeed_(SPEED),
         mouseSensitivity_(SENSITIVITY),
-        fieldOfView_(FOV)
+        fieldOfView_(FOV),
+        cameraMode_(CameraMode::ORBITCAM),
+        cameraActive_(false),
+        target_{0.0f, 0.0f, 0.0f},
+        radius_(10.0f),
+        targetRadius_(10.0f),
+        minRadius_(0.5f),
+        maxRadius_(50.0f)
 {
     updateCameraVectors();
-    // updateOrbitCamera();
 }
 
 CameraVectors Camera::getCameraVectors() const {

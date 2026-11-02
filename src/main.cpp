@@ -19,11 +19,11 @@ int SCR_WIDTH = 800;
 int SCR_HEIGHT = 600;
 
 /* camera */
-//   Y      +Y up   -Y down
+//   Y      +Y up    -Y down
 //   |
 //   +--X   +X right -X left
 //  /
-// Z        +Z back -Z front
+// Z        +Z back  -Z front
 
 //             X     Y     Z
 Camera camera({0.0f, 0.0f, 10.0f});
@@ -81,6 +81,9 @@ int main(int argc, char* argv[]) {
 
     glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+
     glEnable(GL_DEPTH_TEST);
 
     /*loading shader */
@@ -93,7 +96,7 @@ int main(int argc, char* argv[]) {
         model.loadDefaultCube();
     }
     if (!textureLoaded) {
-        std::cerr << "no texture supplied" << std::endl;
+        model.loadDefaultTexture();
     }
     model2.loadDefaultCube();
 
@@ -118,8 +121,8 @@ int main(int argc, char* argv[]) {
 
         /* blend between render modes if mode was switched */
         if (blendAmount < 1.0f) {
-            blendAmount = smoothlerp(blendAmount, 1.0f, 4.0f, deltaTime);
-            if (std::abs(blendAmount - 1.0f) < 0.01f) {
+            blendAmount = smoothlerp(blendAmount, 1.0f, 6.0f, deltaTime);
+            if (std::abs(blendAmount - 1.0f) < 0.02f) {
                 blendAmount = 1.0f;
                 currentMode = nextMode;
             }

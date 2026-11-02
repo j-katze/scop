@@ -6,11 +6,11 @@
 #include "mat4.hpp"
 #include "object.hpp"
 
-//   Y      +Y up       -Y down
+//   Y      +Y up    -Y down
 //   |
-//   +--X   +X right    -X left
+//   +--X   +X right -X left
 //  /
-// Z        +Z back     -Z front
+// Z        +Z back  -Z front
 
 /* default camera values */
 const float YAW         = 0.0f;
@@ -75,16 +75,16 @@ private:
     float      mouseSensitivity_;
     float      fieldOfView_;
 
-    CameraMode cameraMode_   = CameraMode::ORBITCAM;
+    CameraMode cameraMode_;
 
-    bool       cameraActive_ = false;
+    bool       cameraActive_;
 
     /* orbit camera */
-    Vec3       target_       {0.0f, 0.0f, 0.0f};
-    float      radius_       = 10.0f;
-    float      targetRadius_ = 10.0f;
-    float      minRadius_    = 0.5f;
-    float      maxRadius_    = 50.0f;
+    Vec3       target_;
+    float      radius_;
+    float      targetRadius_;
+    float      minRadius_;
+    float      maxRadius_;
     float      targetYaw_;
     float      targetPitch_;
 
