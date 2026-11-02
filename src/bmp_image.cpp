@@ -167,15 +167,18 @@ bool BmpImage::loadTexture(const std::string& path) {
 void BmpImage::loadDefaultTexture() {
     std::cout << "No texture provided, using default pink texture." << std::endl;
 
-    image_.width = 1;
+    image_.width  = 1;
     image_.height = 1;
-    image_.rgb = {255, 0, 255};
+    image_.rgb    = {255, 0, 255};
 
     uploadImageToGPU();
 }
 
-bool BmpImage::uploadImageToGPU() {
+void BmpImage::uploadImageToGPU() {
+    /* creating texture object */
     glGenTextures(1, &textureID_);
+
+    /* binding the texture object */
     glBindTexture(GL_TEXTURE_2D, textureID_);
 
     /* set texture wrapping parameters */
@@ -186,15 +189,21 @@ bool BmpImage::uploadImageToGPU() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+    /* set pixel rows to 1 byte al so tightly packed rgb data is read correctly */
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    /* uploading the texture data to the GPU */
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_.width, image_.height, 0,
                  GL_RGB, GL_UNSIGNED_BYTE, image_.rgb.data());
+
+    /* generating mipmap for the texture */
     glGenerateMipmap(GL_TEXTURE_2D);
+
+    /* resetting unpack alignment to default */
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
+    /* unbinding the texture object */
     glBindTexture(GL_TEXTURE_2D, 0);
-
-    return 1;
 }
 
 /* read 2 bytes from file and store them in a uint16_t */

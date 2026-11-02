@@ -6,12 +6,14 @@
 #include "object.hpp"
 #include "mat4.hpp"
 
+#include <cstdlib>
 #include <iostream>
 #include <unordered_map>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void error_callback(int error, const char* description);
 void processInput(GLFWwindow *window);
 
 /* settings */
@@ -29,9 +31,10 @@ int SCR_HEIGHT = 600;
 Camera camera({0.0f, 0.0f, 10.0f});
 Object model;
 Object model2;
-float lastX = SCR_WIDTH / 2.0f;
-float lastY = SCR_HEIGHT / 2.0f;
-bool firstMouse = true;
+
+float  lastX = SCR_WIDTH / 2.0f;
+float  lastY = SCR_HEIGHT / 2.0f;
+bool   firstMouse = true;
 
 /* timing */
 float deltaTime = 0.0f;
@@ -53,8 +56,10 @@ int main(int argc, char* argv[]) {
     /* initialize */
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
-        return 1;
+        return EXIT_FAILURE;
     }
+
+    /* use OpenGl 3.3 core profile (core profile excludes older and deprecated features) */
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -64,19 +69,22 @@ int main(int argc, char* argv[]) {
     if (window == NULL) {
         std::cout << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
-        return -1;
+        return EXIT_FAILURE;
     }
     glfwMakeContextCurrent(window);
+
+    /* set up event callbacks */
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
+    glfwSetErrorCallback(error_callback);
 
     /* load OpenGL function pointers via GLAD */
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "Failed to load OpenGL functions with GLAD\n";
         glfwDestroyWindow(window);
         glfwTerminate();
-        return 1;
+        return EXIT_FAILURE;
     }
 
     glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
@@ -89,9 +97,9 @@ int main(int argc, char* argv[]) {
     /*loading shader */
     Shader shader("shaders/vertex.vert", "shaders/fragment.frag");
 
+    /* loading model and texture */
     const bool modelLoaded = argc > 1 && model.loadModel(argv[1]);
     const bool textureLoaded = argc > 2 && model.loadTexture(argv[2]);
-
     if (!modelLoaded) {
         model.loadDefaultCube();
     }
@@ -152,7 +160,7 @@ int main(int argc, char* argv[]) {
     glfwDestroyWindow(window);
     /* terminate program, clearing all allocated glfw resources */
     glfwTerminate();
-    return 0;
+    return EXIT_SUCCESS;
 }
 
 void switchRendermode(RenderMode newMode) {
@@ -304,3 +312,17 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     }
 }
 
+void error_callback(int error, const char* description) {
+    if (description) {
+        std::cerr << "GLFW error 0x" << error << ": " << description << std::endl;
+    }
+    else {
+        std::cerr << "GLFW error 0x" << error << ": unknown" << std::endl;
+    }
+}
+
+// void checkGlErrors(const char* where) {
+//     for (GLenum error; (error = glGetError()) != GL_NO_ERROR; ) {
+//         std::cerr << "OpenGl error 0x" << error << " at " << where << std::endl;
+//     }
+// }

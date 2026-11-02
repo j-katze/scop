@@ -77,11 +77,18 @@ void Object::update(const Shader& shader, float deltaTime) {
         return;
     }
 
+    /* bind texture to texture onit 0 */
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture_.getTextureId());
 
+    /* bind model */
     glBindVertexArray(objModel_.getVAO());
+
+    /* draw model */
     glDrawArrays(GL_TRIANGLES, 0, objModel_.getVertexCount());
+
+    /* unbind texture and model */
+    glBindTexture(GL_TEXTURE0, 0);
     glBindVertexArray(0);
 }
 

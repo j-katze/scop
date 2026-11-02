@@ -63,7 +63,7 @@ private:
     FileHeader   fileHeader_;
     InfoHeader   infoHeader_;
 
-    bool uploadImageToGPU();
+    void uploadImageToGPU();
 
     bool readU16(std::ifstream& file, uint16_t& value);
     bool readU32(std::ifstream& file, uint32_t& value);

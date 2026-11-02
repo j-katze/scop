@@ -343,32 +343,34 @@ void ObjModel::uploadMeshToGpu() {
                  vertices_.data(),
                  GL_STATIC_DRAW);
 
-    /* configuring attribute location 0 as position */
+    /* configuring shader attribute location 0 as position */
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
                           sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, position)));
     glEnableVertexAttribArray(0);
 
-    /* configuring attribute location 1 for the normals */
+    /* configuring shader attribute location 1 for the normals */
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
                           sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, normal)));
     glEnableVertexAttribArray(1);
 
-    /* configuring attribute location 2 for texture coordinates */
+    /* configuring shader attribute location 2 for texture coordinates */
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
                           sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, uv)));
     glEnableVertexAttribArray(2);
 
-    /* configuring attribute location 3 for vertex colours */
+    /* configuring shader attribute location 3 for vertex colours */
     glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
                           sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, colour)));
     glEnableVertexAttribArray(3);
 
+    /* configuring shader attribute location 4 for material colours */
     glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE,
                           sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, materialColour)));
     glEnableVertexAttribArray(4);
 
+    /* unbinding vao and vbo */
     glBindVertexArray(0);
-
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void ObjModel::addCubeFace(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3&d,
