@@ -1,4 +1,4 @@
-#include "../include/glad/glad.h"
+#include "glad.h"
 #include "bmp_image.hpp"
 
 #include <cstdint>

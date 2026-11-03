@@ -306,19 +306,19 @@ void ObjModel::defaultCube() {
     const Vec3 rgbH   { 0.0f,  0.0f,  0.0f}; // black
 
     /* front */
-    addCubeFace(posA, posB, posC, posD, front,  rgbD, rgbC, rgbB, rgbA, defaultMaterial.getDiffuseColour());
+    addCubeFace(posA, posB, posC, posD, front,  rgbA, rgbB, rgbC, rgbD, defaultMaterial.getDiffuseColour());
 
     /* back */
     addCubeFace(posE, posF, posG, posH, back,   rgbE, rgbF, rgbG, rgbH, defaultMaterial.getDiffuseColour());
 
     /* left */
-    addCubeFace(posA, posE, posH, posD, left,   rgbA, rgbE, rgbH, rgbD, defaultMaterial.getDiffuseColour());
+    addCubeFace(posE, posA, posD, posH, left,   rgbE, rgbA, rgbD, rgbH, defaultMaterial.getDiffuseColour());
 
     /* right */
-    addCubeFace(posF, posB, posC, posG, right,  rgbF, rgbB, rgbC, rgbG, defaultMaterial.getDiffuseColour());
+    addCubeFace(posB, posD, posG, posC, right,  rgbB, rgbF, rgbG, rgbC, defaultMaterial.getDiffuseColour());
 
     /* top */
-    addCubeFace(posA, posB, posF, posE, top,    rgbA, rgbB, rgbF, rgbE, defaultMaterial.getDiffuseColour());
+    addCubeFace(posE, posF, posB, posA, top,    rgbE, rgbF, rgbB, rgbA, defaultMaterial.getDiffuseColour());
 
     /* bottom */
     addCubeFace(posH, posG, posC, posD, bottom, rgbH, rgbG, rgbC, rgbD, defaultMaterial.getDiffuseColour());

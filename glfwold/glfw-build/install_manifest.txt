@@ -1,8 +1,0 @@
-/home/moth/Projects/42/scop/deps/glfw/lib/libglfw3.a
-/home/moth/Projects/42/scop/deps/glfw/include/GLFW/glfw3native.h
-/home/moth/Projects/42/scop/deps/glfw/include/GLFW/glfw3.h
-/home/moth/Projects/42/scop/deps/glfw/lib/cmake/glfw3/glfw3Config.cmake
-/home/moth/Projects/42/scop/deps/glfw/lib/cmake/glfw3/glfw3ConfigVersion.cmake
-/home/moth/Projects/42/scop/deps/glfw/lib/cmake/glfw3/glfw3Targets.cmake
-/home/moth/Projects/42/scop/deps/glfw/lib/cmake/glfw3/glfw3Targets-release.cmake
-/home/moth/Projects/42/scop/deps/glfw/lib/pkgconfig/glfw3.pc

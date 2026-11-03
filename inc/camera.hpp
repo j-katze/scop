@@ -1,7 +1,7 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
 
-#include "../include/glad/glad.h"
+#include "glad.h"
 #include "vec3.hpp"
 #include "mat4.hpp"
 #include "object.hpp"

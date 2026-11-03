@@ -1,4 +1,4 @@
-#include "../include/glad/glad.h"
+#include "glad.h"
 #include <GLFW/glfw3.h>
 
 #include "shader.hpp"
@@ -145,13 +145,13 @@ int main(int argc, char* argv[]) {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
     shader.destroy();
     model.destroy();
+    model2.destroy();
     glfwDestroyWindow(window);
     /* terminate program, clearing all allocated glfw resources */
     glfwTerminate();
-    return EXIT_SUCCESS;
+    return 0;
 }
 
 void switchRendermode(RenderMode newMode) {

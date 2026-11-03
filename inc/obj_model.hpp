@@ -1,7 +1,7 @@
 #ifndef OBJ_MODEL_HPP
 #define OBJ_MODEL_HPP
 
-#include "../include/glad/glad.h"
+#include "glad.h"
 
 #include "vec3.hpp"
 #include "vec2.hpp"
