@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
     glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
     glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -248,7 +248,7 @@ void processInput(GLFWwindow *window) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
         else {
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_CAPTURED);
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         }
     }
 }

@@ -1,5 +1,5 @@
 NAME =		scop
-CXX =		c++
+CXX =		g++
 
 SDIR =		./src/
 SFILES =	main.cpp vec3.cpp vec2.cpp mat4.cpp camera.cpp object.cpp obj_model.cpp bmp_image.cpp mtl_material.cpp shader.cpp
@@ -7,11 +7,13 @@ SRCS =		$(addprefix ${SDIR}, ${SFILES})
 
 GLAD =		./src/glad.c
 
+# GLFW =		./glfw/
+
 ODIR =		./obj/
 OFILES =	$(SFILES:.cpp=.o)
 OBJS =		$(addprefix ${ODIR}, ${OFILES})
 
-OBJSGLAD = $(GLAD:.c=.o)
+OBJSGLAD = $(ODIR)glad.o
 
 IDIR =		./inc/
 
@@ -22,12 +24,6 @@ IDIR =		./inc/
 #GLFW_BUILD =	$(DEPSDIR)/glfw-build
 #GLFW_LIB =	$(GLFW_PREFIX)/lib/libglfw3.a
 #GLFW_INC =	$(GLFW_PREFIX)/include
-
-#GLEW_PREFIX =	$(DEPSDIR)/glew
-#GLEW_SRC =	$(DEPSDIR)/glew-src
-#GLEW_BUILD =	$(DEPSDIR)/glew-build
-#GLEW_LIB =	$(GLEW_PREFIX)/lib/libGLEW.a
-#GLEW_INC =	$(GLEW_PREFIX)/include
 
 CXXFLAGS =	-I $(IDIR) -Wall -Wextra -Werror -std=c++11 -g -O1
 
@@ -61,42 +57,28 @@ $(NAME):	$(ODIR) $(OBJS) $(OBJSGLAD) #$(GLFW_LIB) #$(GLEW_LIB)
 	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(OBJS) $(OBJSGLAD) $(LDLIBS) -o $@
 	@printf "$(B_GREEN)- complete!$(RESET)\n"
 
-$(GLFW_LIB):
-	@printf "$(MAGENTA)- preparing GLFW in $(GLFW_PREFIX)$(RESET)\n"
-	@mkdir -p $(DEPSDIR)
-	@if [ ! -d "$(GLFW_SRC)" ]; then \
-		echo "Cloning GLFW..."; \
-		git clone --depth 1 https://github.com/glfw/glfw.git $(GLFW_SRC); \
-	fi
-	@rm -rf $(GLFW_BUILD)
-	mkdir -p $(GLFW_BUILD)
-	cmake -S $(GLFW_SRC) -B $(GLFW_BUILD) \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DBUILD_SHARED_LIBS=OFF \
-		-DFWGLW_BUILD_EXAMPLES=OFF \
-		-DGLFW_BUILD_EXAMPLES=OFF \
-		-DGLFW_BUILD_TESTS=OFF \
-		-DGLFW_BUILD_DOCS=OFF \
-		-DCMAKE_INSTALL_PREFIX=$(GLFW_PREFIX)
-	@cmake --build $(GLFW_BUILD) -j
-	@cmake --install $(GLFW_BUILD)
+# $(GLFW_LIB):
+# 	@printf "$(MAGENTA)- preparing GLFW in $(GLFW_PREFIX)$(RESET)\n"
+# 	@mkdir -p $(DEPSDIR)
+# 	@if [ ! -d "$(GLFW_SRC)" ]; then \
+# 		echo "Cloning GLFW..."; \
+# 		git clone --depth 1 https://github.com/glfw/glfw.git $(GLFW_SRC); \
+# 	fi
+# 	@rm -rf $(GLFW_BUILD)
+# 	mkdir -p $(GLFW_BUILD)
+# 	cmake -S $(GLFW_SRC) -B $(GLFW_BUILD) \
+# 		-DCMAKE_BUILD_TYPE=Release \
+# 		-DBUILD_SHARED_LIBS=OFF \
+# 		-DFWGLW_BUILD_EXAMPLES=OFF \
+# 		-DGLFW_BUILD_EXAMPLES=OFF \
+# 		-DGLFW_BUILD_TESTS=OFF \
+# 		-DGLFW_BUILD_DOCS=OFF \
+# 		-DCMAKE_INSTALL_PREFIX=$(GLFW_PREFIX)
+# 	@cmake --build $(GLFW_BUILD) -j
+# 	@cmake --install $(GLFW_BUILD)
 
-#test:
-#	@printf "$(MAGENTA)- preparing GLEW in $(GLEW_PREFIX)$(RESET)\n"
-#	@mkdir -p $(DEPSDIR)
-#	@if [ ! -d "$(GLEW_SRC)" ]; then \
-		echo "Cloning GLEW..."; \
-		git clone --depth 1 https://github.com/nigels-com/glew.git $(GLEW_SRC); \
-	fi
-#	@rm -rf $(GLEW_BUILD)
-#	@mkdir -p $(GLEW_BUILD)
-#	@cmake -S $(GLEW_SRC) -B $(GLEW_BUILD) \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_INSTALL_PREFIX=$(GLEW_PREFIX) \
-		-DGLEW_BUILD_SHARED=OFF \
-		-DGLEW_BUILD_STATIC=ON
-#	@cmake --build $(GLEW_BUILD) -j
-#	@cmake --install $(GLEW_BUILD)
+$(ODIR)glad.o: $(GLAD) | $(ODIR)
+	gcc $(CPPFLAGS) -I$(IDIR) -fPIE -c $< -o $@
 
 $(ODIR)%.o:	$(SDIR)%.cpp
 	@printf "$(BLUE)- compiling object from: $<$(RESET)\n"
