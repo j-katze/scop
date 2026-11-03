@@ -4,7 +4,6 @@
 #include "shader.hpp"
 #include "camera.hpp"
 #include "object.hpp"
-#include "mat4.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -117,8 +116,6 @@ int main(int argc, char* argv[]) {
 
         /* process input */
         processInput(window);
-        camera.update(deltaTime);
-        // camera.printState();
 
         /* clear buffers */
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -140,13 +137,7 @@ int main(int argc, char* argv[]) {
         shader.setInt("nextMode", static_cast<int>(nextMode));
         shader.setFloat("blendAmount", blendAmount);
 
-        /* pass projection matrix to shader */
-        Mat4 projectionMat = camera.getPerspectiveMatrix((float)SCR_WIDTH, (float)SCR_HEIGHT);
-        shader.setMat4("projection", projectionMat);
-
-        /* camera / view transformations */
-        Mat4 viewMat = camera.getViewMatrix();
-        shader.setMat4("view", viewMat);
+        camera.update(shader, deltaTime, (float)SCR_WIDTH, (float)SCR_HEIGHT);
 
         model.update(shader, deltaTime);
         model2.update(shader, deltaTime);

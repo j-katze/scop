@@ -150,7 +150,7 @@ void Camera::toggleFreeCam() {
     }
 }
 
-void Camera::update(float deltaTime) {
+void Camera::update(const Shader& shader, float deltaTime, float width, float height) {
     if (cameraMode_ == CameraMode::SWITCHING) {
         const float smoothing = 16.0f;
 
@@ -162,7 +162,6 @@ void Camera::update(float deltaTime) {
             yawDelta = targetYaw_ + 360.0f - yaw_;
         }
 
-        // std::cout << yawDelta << std::endl;
         yaw_ = smoothlerp(yaw_, yaw_ + yawDelta, smoothing, deltaTime);
         pitch_ = smoothlerp(pitch_, targetPitch_, smoothing, deltaTime);
 
@@ -180,6 +179,10 @@ void Camera::update(float deltaTime) {
         radius_ = smoothlerp(radius_, targetRadius_, 8.0f, deltaTime);
         updateOrbitCamera();
     }
+    // printState();
+
+    shader.setMat4("projection", getPerspectiveMatrix(width, height));
+    shader.setMat4("view", getViewMatrix());
 }
 
 void Camera::printState(void) {

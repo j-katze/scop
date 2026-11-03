@@ -49,7 +49,7 @@ public:
     /* switch between orbit and free cam */
     void toggleFreeCam();
 
-    void update(float deltaTime);
+    void update(const Shader& shader, float deltaTime, float width, float height);
 
     void printState(void);
 
