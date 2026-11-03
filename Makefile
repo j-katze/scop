@@ -1,5 +1,5 @@
 NAME =		scop
-CXX =		g++
+CXX =		c++
 
 SDIR =		./src/
 SFILES =	main.cpp vec3.cpp vec2.cpp mat4.cpp camera.cpp object.cpp obj_model.cpp bmp_image.cpp mtl_material.cpp shader.cpp
@@ -15,9 +15,13 @@ OBJSGLAD = $(ODIR)glad.o
 
 IDIR =		./inc/
 
+IDIRGLAD =	./include/glad/
+
 CXXFLAGS =	-I $(IDIR) -Wall -Wextra -Werror -std=c++11 -g -O1
 
 LDLIBS =	-lglfw -lGL -ldl -lpthread -lm -lX11 -lXrandr -lXi -lXxf86vm -lwayland-client -lwayland-cursor
+
+INCGLAD = -I$(IDIRGLAD)
 
 # reset text colour to default
 RESET =		\e[0m
@@ -49,11 +53,11 @@ $(NAME):	$(ODIR) $(OBJS) $(OBJSGLAD) #$(GLFW_LIB) #$(GLEW_LIB)
 
 $(ODIR)glad.o: $(GLAD) | $(ODIR)
 	@printf "$(BLUE)- compiling glad$(RESET)\n"
-	@gcc $(CPPFLAGS) -I./include/glad/ -fPIE -c $< -o $@
+	@gcc $(CPPFLAGS) $(INCGLAD) -fPIE -c $< -o $@
 
 $(ODIR)%.o:	$(SDIR)%.cpp
 	@printf "$(BLUE)- compiling object from: $<$(RESET)\n"
-	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -I./include/glad/ -o $@ -c $<
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCGLAD) -o $@ -c $<
 
 $(ODIR):
 	@printf "$(MAGENTA)- creating obj directory$(RESET)\n"

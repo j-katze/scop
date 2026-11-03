@@ -315,7 +315,7 @@ void ObjModel::defaultCube() {
     addCubeFace(posE, posA, posD, posH, left,   rgbE, rgbA, rgbD, rgbH, defaultMaterial.getDiffuseColour());
 
     /* right */
-    addCubeFace(posB, posD, posG, posC, right,  rgbB, rgbF, rgbG, rgbC, defaultMaterial.getDiffuseColour());
+    addCubeFace(posB, posF, posG, posC, right,  rgbB, rgbF, rgbG, rgbC, defaultMaterial.getDiffuseColour());
 
     /* top */
     addCubeFace(posE, posF, posB, posA, top,    rgbE, rgbF, rgbB, rgbA, defaultMaterial.getDiffuseColour());
