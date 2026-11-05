@@ -1,5 +1,6 @@
 NAME =		scop
 CXX =		c++
+CC =		gcc
 
 SDIR =		./src/
 SFILES =	main.cpp vec3.cpp vec2.cpp mat4.cpp camera.cpp object.cpp obj_model.cpp bmp_image.cpp mtl_material.cpp shader.cpp
@@ -11,17 +12,19 @@ ODIR =		./obj/
 OFILES =	$(SFILES:.cpp=.o)
 OBJS =		$(addprefix ${ODIR}, ${OFILES})
 
-OBJSGLAD = $(ODIR)glad.o
+OBJSGLAD =	$(ODIR)glad.o
 
 IDIR =		./inc/
 
 IDIRGLAD =	./glad/inc/
 
-CXXFLAGS =	-I $(IDIR) -Wall -Wextra -Werror -std=c++11 -g -O1
+CPPFLAGS =	-I $(IDIR) -I $(IDIRGLAD)
 
-LDLIBS =	-lglfw -lGL -ldl -lpthread -lm -lX11 -lXrandr -lXi -lXxf86vm -lwayland-client -lwayland-cursor
+CXXFLAGS =	-Wall -Wextra -Werror -std=c++11
 
-INCGLAD = -I$(IDIRGLAD)
+CFLAGS =	-fPIE
+
+LDLIBS =	-lglfw
 
 # reset text colour to default
 RESET =		\e[0m
@@ -46,18 +49,18 @@ B_WHITE =	\e[1;37m
 
 all:	$(NAME)
 
-$(NAME):	$(ODIR) $(OBJS) $(OBJSGLAD) #$(GLFW_LIB) #$(GLEW_LIB)
+$(NAME):	$(ODIR) $(OBJS) $(OBJSGLAD)
 	@printf "$(CYAN)- linking executable: $(NAME)$(RESET)\n"
-	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(OBJS) $(OBJSGLAD) $(LDLIBS) -o $@
+	@$(CXX) $(OBJS) $(OBJSGLAD) $(LDLIBS) -o $@
 	@printf "$(B_GREEN)- complete!$(RESET)\n"
 
 $(ODIR)glad.o: $(GLAD) | $(ODIR)
 	@printf "$(BLUE)- compiling glad$(RESET)\n"
-	@gcc $(CPPFLAGS) $(INCGLAD) -fPIE -c $< -o $@
+	@$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
-$(ODIR)%.o:	$(SDIR)%.cpp
+$(ODIR)%.o:	$(SDIR)%.cpp | $(ODIR)
 	@printf "$(BLUE)- compiling object from: $<$(RESET)\n"
-	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) $(INCGLAD) -o $@ -c $<
+	@$(CXX) $(CPPFLAGS) $(CXXFLAGS) -o $@ -c $<
 
 $(ODIR):
 	@printf "$(MAGENTA)- creating obj directory$(RESET)\n"
