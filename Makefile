@@ -5,7 +5,7 @@ SDIR =		./src/
 SFILES =	main.cpp vec3.cpp vec2.cpp mat4.cpp camera.cpp object.cpp obj_model.cpp bmp_image.cpp mtl_material.cpp shader.cpp
 SRCS =		$(addprefix ${SDIR}, ${SFILES})
 
-GLAD =		./src/glad.c
+GLAD =		./glad/src/glad.c
 
 ODIR =		./obj/
 OFILES =	$(SFILES:.cpp=.o)
@@ -15,7 +15,7 @@ OBJSGLAD = $(ODIR)glad.o
 
 IDIR =		./inc/
 
-IDIRGLAD =	./include/glad/
+IDIRGLAD =	./glad/inc/
 
 CXXFLAGS =	-I $(IDIR) -Wall -Wextra -Werror -std=c++11 -g -O1
 

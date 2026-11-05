@@ -551,8 +551,8 @@ void ObjModel::generatePlanarUVs(std::vector<Vertex>& vertices) {
         maxPos[2] - minPos[2]
     };
 
-    int uAxis; // = axes[0];
-    int vAxis; // = axes[1];
+    int uAxis;
+    int vAxis;
 
     if (range.x >= range.y && range.x >= range.z) {
         uAxis = 0;

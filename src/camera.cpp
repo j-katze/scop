@@ -1,4 +1,5 @@
 #include "camera.hpp"
+#include "glad.h"
 
 #include <cmath>
 #include <iomanip>
@@ -177,7 +178,7 @@ void Camera::update(const Shader& shader, float deltaTime, float width, float he
     }
     if (cameraMode_ == CameraMode::ORBITCAM && cameraActive_) {
         radius_ = smoothlerp(radius_, targetRadius_, 8.0f, deltaTime);
-        updateOrbitCamera();
+        updateOrbitCameraVectors();
     }
     // printState();
 
@@ -244,7 +245,7 @@ void Camera::updateCameraVectors() {
     up_ = normalize(cross(right_, front_));
 }
 
-void Camera::updateOrbitCamera() {
+void Camera::updateOrbitCameraVectors() {
     const float yawRad = radians(yaw_);
     const float pitchRad = radians(pitch_);
 

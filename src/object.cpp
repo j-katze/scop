@@ -133,7 +133,8 @@ void Object::processMouseMovement(float xoffset, float yoffset, Vec3 cameraUp, V
 }
 
 void Object::processMouseScroll(float yoffset) {
-    float scrollVelocity = yoffset * 0.1;
+    float scrollSpeed = 0.5;
+    float scrollVelocity = yoffset * scrollSpeed;
     float minScale = 0.1f;
 
     targetScale_ = {targetScale_.x + scrollVelocity, targetScale_.y + scrollVelocity, targetScale_.z + scrollVelocity};

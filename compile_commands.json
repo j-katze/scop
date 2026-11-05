@@ -9,6 +9,9 @@
       "-Wextra",
       "-Werror",
       "-std=c++11",
+      "-g",
+      "-O1",
+      "-I./glad/inc/",
       "-o",
       "obj/main.o",
       "-c",
@@ -18,7 +21,7 @@
     "output": "obj/main.o"
   },
   {
-    "file": "src/stb_image.cpp",
+    "file": "src/vec3.cpp",
     "arguments": [
       "/usr/bin/c++",
       "-I",
@@ -27,12 +30,197 @@
       "-Wextra",
       "-Werror",
       "-std=c++11",
+      "-g",
+      "-O1",
+      "-I./glad/inc/",
       "-o",
-      "obj/stb_image.o",
+      "obj/vec3.o",
       "-c",
-      "src/stb_image.cpp"
+      "src/vec3.cpp"
     ],
     "directory": "/home/moth/Projects/42/scop",
-    "output": "obj/stb_image.o"
+    "output": "obj/vec3.o"
+  },
+  {
+    "file": "src/vec2.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-I",
+      "./inc/",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++11",
+      "-g",
+      "-O1",
+      "-I./glad/inc/",
+      "-o",
+      "obj/vec2.o",
+      "-c",
+      "src/vec2.cpp"
+    ],
+    "directory": "/home/moth/Projects/42/scop",
+    "output": "obj/vec2.o"
+  },
+  {
+    "file": "src/mat4.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-I",
+      "./inc/",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++11",
+      "-g",
+      "-O1",
+      "-I./glad/inc/",
+      "-o",
+      "obj/mat4.o",
+      "-c",
+      "src/mat4.cpp"
+    ],
+    "directory": "/home/moth/Projects/42/scop",
+    "output": "obj/mat4.o"
+  },
+  {
+    "file": "src/camera.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-I",
+      "./inc/",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++11",
+      "-g",
+      "-O1",
+      "-I./glad/inc/",
+      "-o",
+      "obj/camera.o",
+      "-c",
+      "src/camera.cpp"
+    ],
+    "directory": "/home/moth/Projects/42/scop",
+    "output": "obj/camera.o"
+  },
+  {
+    "file": "src/object.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-I",
+      "./inc/",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++11",
+      "-g",
+      "-O1",
+      "-I./glad/inc/",
+      "-o",
+      "obj/object.o",
+      "-c",
+      "src/object.cpp"
+    ],
+    "directory": "/home/moth/Projects/42/scop",
+    "output": "obj/object.o"
+  },
+  {
+    "file": "src/obj_model.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-I",
+      "./inc/",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++11",
+      "-g",
+      "-O1",
+      "-I./glad/inc/",
+      "-o",
+      "obj/obj_model.o",
+      "-c",
+      "src/obj_model.cpp"
+    ],
+    "directory": "/home/moth/Projects/42/scop",
+    "output": "obj/obj_model.o"
+  },
+  {
+    "file": "src/bmp_image.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-I",
+      "./inc/",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++11",
+      "-g",
+      "-O1",
+      "-I./glad/inc/",
+      "-o",
+      "obj/bmp_image.o",
+      "-c",
+      "src/bmp_image.cpp"
+    ],
+    "directory": "/home/moth/Projects/42/scop",
+    "output": "obj/bmp_image.o"
+  },
+  {
+    "file": "src/mtl_material.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-I",
+      "./inc/",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++11",
+      "-g",
+      "-O1",
+      "-I./glad/inc/",
+      "-o",
+      "obj/mtl_material.o",
+      "-c",
+      "src/mtl_material.cpp"
+    ],
+    "directory": "/home/moth/Projects/42/scop",
+    "output": "obj/mtl_material.o"
+  },
+  {
+    "file": "src/shader.cpp",
+    "arguments": [
+      "/usr/bin/c++",
+      "-I",
+      "./inc/",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-std=c++11",
+      "-g",
+      "-O1",
+      "-I./glad/inc/",
+      "-o",
+      "obj/shader.o",
+      "-c",
+      "src/shader.cpp"
+    ],
+    "directory": "/home/moth/Projects/42/scop",
+    "output": "obj/shader.o"
+  },
+  {
+    "file": "glad/src/glad.c",
+    "arguments": [
+      "/usr/bin/gcc",
+      "-I./glad/inc/",
+      "-fPIE",
+      "-c",
+      "glad/src/glad.c",
+      "-o",
+      "obj/glad.o"
+    ],
+    "directory": "/home/moth/Projects/42/scop",
+    "output": "obj/glad.o"
   }
 ]

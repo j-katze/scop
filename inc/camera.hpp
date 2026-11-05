@@ -1,7 +1,6 @@
 #ifndef CAMERA_HPP
 #define CAMERA_HPP
 
-#include "glad.h"
 #include "vec3.hpp"
 #include "mat4.hpp"
 #include "object.hpp"
@@ -95,6 +94,6 @@ private:
 
     /* calculates the front vector from the Camera's (updated) Euler Angles */
     void updateCameraVectors();
-    void updateOrbitCamera();
+    void updateOrbitCameraVectors();
 };
 #endif

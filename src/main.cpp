@@ -97,10 +97,14 @@ int main(int argc, char* argv[]) {
     Shader shader("shaders/vertex.vert", "shaders/fragment.frag");
 
     /* loading model and texture */
-    const bool modelLoaded = argc > 1 && model.loadModel(argv[1]);
-    const bool textureLoaded = argc > 2 && model.loadTexture(argv[2]);
+    bool modelLoaded = argc > 1 && model.loadModel(argv[1]);
+    bool textureLoaded = argc > 2 && model.loadTexture(argv[2]);
     if (!modelLoaded) {
         model.loadDefaultCube();
+    }
+    if (!textureLoaded) {
+        std::cout << "Attempting to loading cat.bmp" << std::endl;
+        textureLoaded = model.loadTexture("textures/cat.bmp");
     }
     if (!textureLoaded) {
         model.loadDefaultTexture();
