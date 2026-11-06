@@ -29,7 +29,6 @@ int SCR_HEIGHT = 600;
 //             X     Y     Z
 Camera camera({0.0f, 0.0f, 10.0f});
 Object model;
-Object model2;
 
 float  lastX = SCR_WIDTH / 2.0f;
 float  lastY = SCR_HEIGHT / 2.0f;
@@ -109,7 +108,6 @@ int main(int argc, char* argv[]) {
     if (!textureLoaded) {
         model.loadDefaultTexture();
     }
-    model2.loadDefaultCube();
 
     /* render loop */
     while (!glfwWindowShouldClose(window)) {
@@ -144,14 +142,11 @@ int main(int argc, char* argv[]) {
         camera.update(shader, deltaTime, (float)SCR_WIDTH, (float)SCR_HEIGHT);
 
         model.update(shader, deltaTime);
-        model2.update(shader, deltaTime);
-
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
     shader.destroy();
     model.destroy();
-    model2.destroy();
     glfwDestroyWindow(window);
     /* terminate program, clearing all allocated glfw resources */
     glfwTerminate();
@@ -246,7 +241,6 @@ void processInput(GLFWwindow *window) {
         }
     }
     if (pressKeyOnce(window, GLFW_KEY_T)) {
-        // cameraMoveable = !cameraMoveable;
         camera.toggleCameraActive();
         if (camera.getCameraActive()) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -315,9 +309,3 @@ void error_callback(int error, const char* description) {
         std::cerr << "GLFW error 0x" << error << ": unknown" << std::endl;
     }
 }
-
-// void checkGlErrors(const char* where) {
-//     for (GLenum error; (error = glGetError()) != GL_NO_ERROR; ) {
-//         std::cerr << "OpenGl error 0x" << error << " at " << where << std::endl;
-//     }
-// }
