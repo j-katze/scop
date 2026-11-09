@@ -44,7 +44,7 @@ public:
     // void draw() const;
 
     /* default cube in case no object was loaded */
-    void defaultCube();
+    bool defaultCube();
 
 private:
     std::string                        name_;
@@ -56,7 +56,7 @@ private:
     GLsizei                            vertexCount_;
     Vec3                               centerVector_;
 
-    void uploadMeshToGpu();
+    bool uploadMeshToGpu();
 
     void addCubeFace(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3&d,
                      const Vec3& normal,

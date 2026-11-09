@@ -4,9 +4,12 @@
 #include "shader.hpp"
 #include "camera.hpp"
 #include "object.hpp"
+#include "gl_errors.hpp"
 
 #include <cstdlib>
+#include <exception>
 #include <iostream>
+#include <new>
 #include <unordered_map>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
@@ -14,6 +17,10 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void error_callback(int error, const char* description);
 void processInput(GLFWwindow *window);
+
+void clearGlErrors();
+
+bool glfwErrorOccured = false;
 
 /* settings */
 int SCR_WIDTH = 800;
@@ -48,109 +55,154 @@ RenderMode currentMode = RenderMode::VERTEXCOLOUR;
 RenderMode nextMode = RenderMode::VERTEXCOLOUR;
 float blendAmount = 1.0f;
 
+struct GlfwGuard {
+    ~GlfwGuard() {
+        glfwTerminate();
+    }
+};
+
+struct WindowGuard {
+    GLFWwindow* window = nullptr;
+    explicit WindowGuard(GLFWwindow* w) : window(w) {}
+    ~WindowGuard() {
+        if (window) glfwDestroyWindow(window);
+    }
+};
+
 bool renderWireframe = false;
 
 int main(int argc, char* argv[]) {
-    /* initialize */
-    if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        return EXIT_FAILURE;
-    }
+    try {
+        glfwSetErrorCallback(error_callback);
+        /* initialize */
+        if (!glfwInit()) {
+            std::cerr << "Failed to initialize GLFW" << std::endl;
+            return EXIT_FAILURE;
+        }
+        GlfwGuard glfwGuard;
 
-    /* use OpenGl 3.3 core profile (core profile excludes older and deprecated features) */
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    /* create window */
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "scop", NULL, NULL);
-    if (window == NULL) {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return EXIT_FAILURE;
-    }
-    glfwMakeContextCurrent(window);
-
-    /* set up event callbacks */
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-    glfwSetErrorCallback(error_callback);
-
-    /* load OpenGL function pointers via GLAD */
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Failed to load OpenGL functions with GLAD\n";
-        glfwDestroyWindow(window);
-        glfwTerminate();
-        return EXIT_FAILURE;
-    }
-
-    glfwGetFramebufferSize(window, &SCR_WIDTH, &SCR_HEIGHT);
-    glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
-
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-
-    glEnable(GL_DEPTH_TEST);
-
-    /*loading shader */
-    Shader shader("shaders/vertex.vert", "shaders/fragment.frag");
-
-    /* loading model and texture */
-    bool modelLoaded = argc > 1 && model.loadModel(argv[1]);
-    bool textureLoaded = argc > 2 && model.loadTexture(argv[2]);
-    if (!modelLoaded) {
-        model.loadDefaultCube();
-    }
-    if (!textureLoaded) {
-        std::cout << "Attempting to loading cat.bmp" << std::endl;
-        textureLoaded = model.loadTexture("textures/cat.bmp");
-    }
-    if (!textureLoaded) {
-        model.loadDefaultTexture();
-    }
-
-    /* render loop */
-    while (!glfwWindowShouldClose(window)) {
-        /* get deltatime */
-        float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
-
-        /* process input */
-        processInput(window);
-
-        /* clear buffers */
-        glClearColor(0.30f, 0.25f, 0.42f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        /* activate the shader */
-        shader.use();
-
-        /* blend between render modes if mode was switched */
-        if (blendAmount < 1.0f) {
-            blendAmount = smoothlerp(blendAmount, 1.0f, 6.0f, deltaTime);
-            if (std::abs(blendAmount - 1.0f) < 0.02f) {
-                blendAmount = 1.0f;
-                currentMode = nextMode;
-            }
+        /* use OpenGl 3.3 core profile (core profile excludes older and deprecated features) */
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        if (glfwErrorOccured) {
+            return EXIT_FAILURE;
         }
 
-        shader.setInt("currentMode", static_cast<int>(currentMode));
-        shader.setInt("nextMode", static_cast<int>(nextMode));
-        shader.setFloat("blendAmount", blendAmount);
+        /* create window */
+        // GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "scop", NULL, NULL);
+        WindowGuard w{glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "scop", NULL, NULL)};
+        if (w.window == NULL) {
+            std::cout << "Failed to create GLFW window" << std::endl;
+            return EXIT_FAILURE;
+        }
+        glfwMakeContextCurrent(w.window);
+        if (glfwErrorOccured) {
+            return EXIT_FAILURE;
+        }
 
-        camera.update(shader, deltaTime, (float)SCR_WIDTH, (float)SCR_HEIGHT);
+        /* set up event callbacks */
+        glfwSetFramebufferSizeCallback(w.window, framebuffer_size_callback);
+        glfwSetCursorPosCallback(w.window, mouse_callback);
+        glfwSetScrollCallback(w.window, scroll_callback);
+        if (glfwErrorOccured) {
+            return EXIT_FAILURE;
+        }
 
-        model.update(shader, deltaTime);
-        glfwSwapBuffers(window);
-        glfwPollEvents();
+        /* load OpenGL function pointers via GLAD */
+        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+            std::cerr << "Failed to load OpenGL functions with GLAD\n";
+            return EXIT_FAILURE;
+        }
+
+        glfwGetFramebufferSize(w.window, &SCR_WIDTH, &SCR_HEIGHT);
+        if (glfwErrorOccured) {
+            return EXIT_FAILURE;
+        }
+        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
+        glfwSetInputMode(w.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        if (glfwErrorOccured) {
+            return EXIT_FAILURE;
+        }
+
+        glEnable(GL_DEPTH_TEST);
+
+        if (reportGlErrors("initial setup")) {
+            return EXIT_FAILURE;
+        }
+
+        /*loading shader */
+        Shader shader("shaders/vertex.vert", "shaders/fragment.frag");
+        if (reportGlErrors("shader creation")) {
+            return EXIT_FAILURE;
+        }
+
+        /* loading model and texture */
+        bool modelLoaded = argc > 1 && model.loadModel(argv[1]);
+        if (!modelLoaded && !model.loadDefaultCube()) {
+            return EXIT_FAILURE;
+        }
+
+        bool textureLoaded = argc > 2 && model.loadTexture(argv[2]);
+        if (!textureLoaded) {
+            std::cout << "Attempting to loading cat.bmp" << std::endl;
+            textureLoaded = model.loadTexture("textures/cat.bmp");
+        }
+        if (!textureLoaded && !model.loadDefaultTexture()) {
+            return EXIT_FAILURE;
+        }
+
+        /* render loop */
+        while (!glfwWindowShouldClose(w.window)) {
+            /* get deltatime */
+            float currentFrame = static_cast<float>(glfwGetTime());
+            deltaTime = currentFrame - lastFrame;
+            lastFrame = currentFrame;
+
+            /* process input */
+            processInput(w.window);
+
+            /* clear buffers */
+            glClearColor(0.30f, 0.25f, 0.42f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            /* activate the shader */
+            shader.use();
+
+            /* blend between render modes if mode was switched */
+            if (blendAmount < 1.0f) {
+                blendAmount = smoothlerp(blendAmount, 1.0f, 6.0f, deltaTime);
+                if (std::abs(blendAmount - 1.0f) < 0.02f) {
+                    blendAmount = 1.0f;
+                    currentMode = nextMode;
+                }
+            }
+
+            shader.setInt("currentMode", static_cast<int>(currentMode));
+            shader.setInt("nextMode", static_cast<int>(nextMode));
+            shader.setFloat("blendAmount", blendAmount);
+
+            camera.update(shader, deltaTime, (float)SCR_WIDTH, (float)SCR_HEIGHT);
+            model.update(shader, deltaTime);
+
+            glfwSwapBuffers(w.window);
+            glfwPollEvents();
+            if (glfwErrorOccured) {
+                return EXIT_FAILURE;
+            }
+        }
+        shader.destroy();
+        model.destroy();
+        return EXIT_SUCCESS;
+
+    } catch (const std::bad_alloc&) {
+        std::cerr << "Out of memory; shutting down." << std::endl;
+        return EXIT_FAILURE;
+    } catch (const std::exception& e) {
+        std::cerr << "Fatal error: " << e.what() << std::endl;
+        return EXIT_FAILURE;
     }
-    shader.destroy();
-    model.destroy();
-    glfwDestroyWindow(window);
-    /* terminate program, clearing all allocated glfw resources */
-    glfwTerminate();
-    return 0;
 }
 
 void switchRendermode(RenderMode newMode) {
@@ -302,10 +354,15 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 }
 
 void error_callback(int error, const char* description) {
+    glfwErrorOccured = true;
     if (description) {
         std::cerr << "GLFW error 0x" << error << ": " << description << std::endl;
     }
     else {
         std::cerr << "GLFW error 0x" << error << ": unknown" << std::endl;
     }
+}
+
+void clearGlErrors() {
+    while (glGetError() != GL_NO_ERROR) {}
 }

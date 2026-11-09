@@ -1,4 +1,5 @@
 #include "obj_model.hpp"
+#include "gl_errors.hpp"
 
 #include <fstream>
 #include <sstream>
@@ -152,10 +153,14 @@ bool ObjModel::load(const std::string& path) {
                     if (storeVec2(texcoords, texcoordIndex, vertex.uv)) {
                         hasUVs = true;
                     }
+                    else {
+                        faceIsValid = false;
+                        break;
+                    }
                 }
                 /* if a normal is supplied store it in the vertex */
-                if (normalIndex != 0) {
-                    storeVec3(normals, normalIndex, vertex.normal);
+                if (normalIndex != 0 && !storeVec3(normals, normalIndex, vertex.normal)) {
+                    faceIsValid = false;
                 }
 
                 vertex.materialColour = currentMaterial.getDiffuseColour();
@@ -254,12 +259,10 @@ bool ObjModel::load(const std::string& path) {
 
     std::cout << "loaded ObjModel: " << name_ << " from: " << path << std::endl;
 
-    uploadMeshToGpu();
-
-    return true;
+    return uploadMeshToGpu();
 }
 
-void ObjModel::defaultCube() {
+bool ObjModel::defaultCube() {
     destroy();
     materials_.clear();
     vertices_.clear();
@@ -325,17 +328,41 @@ void ObjModel::defaultCube() {
 
     vertexCount_ = 36;
 
-    uploadMeshToGpu();
+    return uploadMeshToGpu();
 }
 
-void ObjModel::uploadMeshToGpu() {
+bool ObjModel::uploadMeshToGpu() {
+    if (vertices_.empty()) {
+        std::cerr << "Cannot upload an empty mesh." << std::endl;
+        return false;
+    }
+
+    if (vertices_.size() > static_cast<std::size_t>(std::numeric_limits<GLsizeiptr>::max() / sizeof(Vertex))) {
+        std::cerr << "Mesh is too large to upload." << std::endl;
+        return false;
+    }
+
+    GLuint newVAO = 0;
+    GLuint newVBO = 0;
+
     /* creating vertex array and buffer */
-    glGenVertexArrays(1, &VAO_);
-    glGenBuffers(1, &VBO_);
+    glGenVertexArrays(1, &newVAO);
+    glGenBuffers(1, &newVBO);
+
+    if (newVAO == 0 || newVBO == 0) {
+        std::cerr << "Failed to create OpenGL mesh objects." << std::endl;
+        if (newVBO != 0) {
+            glDeleteBuffers(1, &newVBO);
+        }
+        if (newVAO != 0) {
+            glDeleteVertexArrays(1, &newVAO);
+        }
+        return false;
+    }
 
     /* binding the vao and vbo, making them active */
-    glBindVertexArray(VAO_);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_);
+    glBindVertexArray(newVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, newVBO);
 
     /* copying the vertices from the cpu to the gpu */
     glBufferData(GL_ARRAY_BUFFER,
@@ -371,6 +398,23 @@ void ObjModel::uploadMeshToGpu() {
     /* unbinding vao and vbo */
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    if (reportGlErrors("mesh upload")) {
+        glDeleteBuffers(1, &newVBO);
+        glDeleteVertexArrays(1, &newVAO);
+        return false;
+    }
+
+    if (VBO_ != 0) {
+        glDeleteBuffers(1, &VBO_);
+    }
+    if (VAO_ != 0) {
+        glDeleteVertexArrays(1, &VAO_);
+    }
+
+    VAO_ = newVAO;
+    VBO_ = newVBO;
+    return true;
 }
 
 void ObjModel::addCubeFace(const Vec3& a, const Vec3& b, const Vec3& c, const Vec3&d,
@@ -514,6 +558,10 @@ void ObjModel::assignRandomTriangleColour(Vertex& a, Vertex& b, Vertex& c) {
 }
 
 Vec3 ObjModel::centerObject(std::vector<Vertex>& vertices) {
+    if (vertices.empty()) {
+        return {0.0f, 0.0f, 0.0f};
+    }
+
     /* find smallest and largest vertex position */
     Vec3 minPos = { vertices[0].position[0], vertices[0].position[1], vertices[0].position[2] };
     Vec3 maxPos = minPos;

@@ -3,7 +3,8 @@ CXX =		c++
 CC =		gcc
 
 SDIR =		./src/
-SFILES =	main.cpp vec3.cpp vec2.cpp mat4.cpp camera.cpp object.cpp obj_model.cpp bmp_image.cpp mtl_material.cpp shader.cpp
+SFILES =	main.cpp vec3.cpp vec2.cpp mat4.cpp camera.cpp object.cpp \
+			obj_model.cpp bmp_image.cpp mtl_material.cpp shader.cpp gl_errors.cpp
 SRCS =		$(addprefix ${SDIR}, ${SFILES})
 
 GLAD =		./glad/src/glad.c
@@ -20,7 +21,7 @@ IDIRGLAD =	./glad/inc/
 
 CPPFLAGS =	-I $(IDIR) -I $(IDIRGLAD)
 
-CXXFLAGS =	-Wall -Wextra -Werror -std=c++11
+CXXFLAGS =	-Wall -Wextra -Werror -std=c++11 -g -O0
 
 CFLAGS =	-fPIE
 

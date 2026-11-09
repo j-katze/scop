@@ -27,10 +27,10 @@ public:
     void destroy();
 
     bool loadModel(const std::string& path);
-    void loadDefaultCube();
+    bool loadDefaultCube();
 
     bool loadTexture(const std::string& path);
-    void loadDefaultTexture();
+    bool loadDefaultTexture();
 
     void update(const Shader& shader, float deltaTime);
 

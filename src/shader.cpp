@@ -3,8 +3,9 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <stdexcept>
 
-Shader::Shader(const char* vertexPath, const char* fragmentPath) {
+Shader::Shader(const char* vertexPath, const char* fragmentPath) : ID_(0) {
     std::string   vertexCode;
     std::string   fragmentCode;
     std::ifstream vShaderFile;
@@ -28,38 +29,56 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath) {
         vertexCode = vShaderStream.str();
         fragmentCode = fShaderStream.str();
     }
-    catch (std::ifstream::failure& e) {
-        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
+    catch (std::ifstream::failure&) {
+        std::cerr << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
+        throw;
     }
 
     const char* vShaderCode = vertexCode.c_str();
     const char* fShaderCode = fragmentCode.c_str();
 
     /* compile shaders */
-    unsigned int vertex, fragment;
+    GLuint vertex = 0;
+    GLuint fragment = 0;
 
-    /* vertex shader */
-    vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, &vShaderCode, NULL);
-    glCompileShader(vertex);
-    checkCompileErrors(vertex, "VERTEX");
+    try {
+        /* vertex shader */
+        vertex = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertex, 1, &vShaderCode, NULL);
+        glCompileShader(vertex);
+        checkCompileErrors(vertex, "VERTEX");
 
-    /* fragment shader */
-    fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, &fShaderCode, NULL);
-    glCompileShader(fragment);
-    checkCompileErrors(fragment, "FRAGMENT");
+        /* fragment shader */
+        fragment = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragment, 1, &fShaderCode, NULL);
+        glCompileShader(fragment);
+        checkCompileErrors(fragment, "FRAGMENT");
 
-    /* shader program */
-    ID_ = glCreateProgram();
-    glAttachShader(ID_, vertex);
-    glAttachShader(ID_, fragment);
-    glLinkProgram(ID_);
-    checkCompileErrors(ID_, "PROGRAM");
+        /* shader program */
+        ID_ = glCreateProgram();
+        glAttachShader(ID_, vertex);
+        glAttachShader(ID_, fragment);
+        glLinkProgram(ID_);
+        checkCompileErrors(ID_, "PROGRAM");
 
-    /* delete the shaders as theyre no longer needed after linking */
-    glDeleteShader(vertex);
-    glDeleteShader(fragment);
+        /* delete the shaders as theyre no longer needed after linking */
+        glDeleteShader(vertex);
+        vertex = 0;
+        glDeleteShader(fragment);
+        fragment = 0;
+    } catch (...) {
+        if (ID_ != 0) {
+            glDeleteProgram(ID_);
+            ID_ = 0;
+        }
+        if (vertex != 0) {
+            glDeleteShader(vertex);
+        }
+        if (fragment != 0) {
+            glDeleteShader(fragment);
+        }
+        throw;
+    }
 }
 
 Shader::~Shader() {
@@ -100,16 +119,24 @@ void Shader::checkCompileErrors(unsigned int shader, std::string type) {
         glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
         if (!success) {
             glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-            std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog <<
-            "\n -- --------------------------------------------------- -- " << std::endl;
+            // std::cerr << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog <<
+            // "\n -- --------------------------------------------------- -- " << std::endl;
+            throw std::runtime_error(
+                    std::string("ERROR::SHADER_COMPILATION_ERROR of type: ") + type + "\n" + infoLog +
+                    "\n -- --------------------------------------------------- -- "
+            );
         }
     }
     else {
         glGetProgramiv(shader, GL_LINK_STATUS, &success);
         if (!success) {
             glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-            std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog <<
-            "\n -- --------------------------------------------------- -- " << std::endl;
+            // std::cerr << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog <<
+            // "\n -- --------------------------------------------------- -- " << std::endl;
+            throw std::runtime_error(
+                    std::string("ERROR::PROGRAM_LINKING_ERROR of type: ") + type + "\n" + infoLog +
+                    "\n -- --------------------------------------------------- -- "
+            );
         }
     }
 }

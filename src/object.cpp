@@ -49,19 +49,22 @@ bool Object::loadModel(const std::string &path) {
     return objModel_.load(path);
 }
 
-void Object::loadDefaultCube() {
-    objModel_.defaultCube();
-    if (texture_.isImageDataEmpty()) {
-        texture_.loadDefaultTexture();
+bool Object::loadDefaultCube() {
+    if (!objModel_.defaultCube()) {
+        return false;
     }
+    if (texture_.isImageDataEmpty() && !texture_.loadDefaultTexture()) {
+        return false;
+    }
+    return true;
 }
 
 bool Object::loadTexture(const std::string &path) {
     return texture_.loadTexture(path);
 }
 
-void Object::loadDefaultTexture() {
-    texture_.loadDefaultTexture();
+bool Object::loadDefaultTexture() {
+    return texture_.loadDefaultTexture();
 }
 
 void Object::update(const Shader& shader, float deltaTime) {

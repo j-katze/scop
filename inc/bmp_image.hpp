@@ -54,7 +54,7 @@ public:
 
     bool loadTexture(const std::string& path);
 
-    void loadDefaultTexture();
+    bool loadDefaultTexture();
 
 private:
     unsigned int textureID_;
@@ -63,7 +63,7 @@ private:
     FileHeader   fileHeader_;
     InfoHeader   infoHeader_;
 
-    void uploadImageToGPU();
+    bool uploadImageToGPU();
 
     bool readU16(std::ifstream& file, uint16_t& value);
     bool readU32(std::ifstream& file, uint32_t& value);

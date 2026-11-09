@@ -1,5 +1,6 @@
 #include "glad.h"
 #include "bmp_image.hpp"
+#include "gl_errors.hpp"
 
 #include <cstdint>
 #include <fstream>
@@ -58,13 +59,13 @@ bool BmpImage::loadTexture(const std::string& path) {
     if (!readU32(file, infoHeader_.dibsize)         ||
         !readI32(file, infoHeader_.width)           ||
         !readI32(file, infoHeader_.height)          ||
-        !readU16(file, infoHeader_.colourPlanes)   ||
+        !readU16(file, infoHeader_.colourPlanes)    ||
         !readU16(file, infoHeader_.bitsPerPixel)    ||
         !readU32(file, infoHeader_.compression)     ||
         !readU32(file, infoHeader_.imageSize)       ||
         !readI32(file, infoHeader_.xPixelsPerMeter) ||
         !readI32(file, infoHeader_.yPixelsPerMeter) ||
-        !readU32(file, infoHeader_.colourTable)    ||
+        !readU32(file, infoHeader_.colourTable)     ||
         !readU32(file, infoHeader_.importantColours))
     {
         std::cerr << "file is too short for a BMP info header" << std::endl;
@@ -107,10 +108,11 @@ bool BmpImage::loadTexture(const std::string& path) {
     const uint64_t paddedRowBytes = rowBytes + padding;
 
     /* total size of image without padding */
-    const uint64_t pixelBytes = rowBytes * uint64_t(infoHeader_.height);
+    const uint64_t pixelBytes = rowBytes * static_cast<uint64_t>(absoluteHeight);
 
     if (pixelBytes > image_.rgb.max_size() ||
-        paddedRowBytes > std::numeric_limits<size_t>::max()) {
+        paddedRowBytes > std::numeric_limits<size_t>::max() ||
+        paddedRowBytes > static_cast<uint64_t>(std::numeric_limits<std::streamsize>::max())) {
         std::cerr << "BMP is too large" << std::endl;
         return false;
     }
@@ -159,27 +161,30 @@ bool BmpImage::loadTexture(const std::string& path) {
 
     std::cout << "loaded texture from: " << path << std::endl;
 
-    uploadImageToGPU();
-
-    return true;
+    return uploadImageToGPU();
 }
 
-void BmpImage::loadDefaultTexture() {
+bool BmpImage::loadDefaultTexture() {
     std::cout << "No texture provided, using default pink texture." << std::endl;
 
     image_.width  = 1;
     image_.height = 1;
     image_.rgb    = {255, 0, 255};
 
-    uploadImageToGPU();
+    return uploadImageToGPU();
 }
 
-void BmpImage::uploadImageToGPU() {
+bool BmpImage::uploadImageToGPU() {
+    GLuint newTexture = 0;
     /* creating texture object */
-    glGenTextures(1, &textureID_);
+    glGenTextures(1, &newTexture);
+    if (newTexture == 0) {
+        std::cerr << "Failed to create OpenGL texture" << std::endl;
+        return false;
+    }
 
     /* binding the texture object */
-    glBindTexture(GL_TEXTURE_2D, textureID_);
+    glBindTexture(GL_TEXTURE_2D, newTexture);
 
     /* set texture wrapping parameters */
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -204,6 +209,16 @@ void BmpImage::uploadImageToGPU() {
 
     /* unbinding the texture object */
     glBindTexture(GL_TEXTURE_2D, 0);
+
+    if (reportGlErrors("texture upload")) {
+        glDeleteTextures(1, &newTexture);
+        return false;
+    }
+    if (textureID_ != 0) {
+        glDeleteTextures(1, &textureID_);
+    }
+    textureID_ = newTexture;
+    return true;
 }
 
 /* read 2 bytes from file and store them in a uint16_t */
