@@ -1,4 +1,5 @@
 #include "obj_model.hpp"
+#include "gl_functions.hpp"
 #include "gl_errors.hpp"
 
 #include <fstream>
@@ -33,10 +34,10 @@ const GLsizei& ObjModel::getVertexCount() const {
 
 void ObjModel::destroy() {
     if (VBO_ != 0) {
-        glDeleteBuffers(1, &VBO_);
+        gl.DeleteBuffers(1, &VBO_);
     }
     if (VAO_ != 0) {
-        glDeleteVertexArrays(1, &VAO_);
+        gl.DeleteVertexArrays(1, &VAO_);
     }
     VAO_ = 0;
     VBO_ = 0;
@@ -346,70 +347,70 @@ bool ObjModel::uploadMeshToGpu() {
     GLuint newVBO = 0;
 
     /* creating vertex array and buffer */
-    glGenVertexArrays(1, &newVAO);
-    glGenBuffers(1, &newVBO);
+    gl.GenVertexArrays(1, &newVAO);
+    gl.GenBuffers(1, &newVBO);
 
     if (newVAO == 0 || newVBO == 0) {
         std::cerr << "Failed to create OpenGL mesh objects." << std::endl;
         if (newVBO != 0) {
-            glDeleteBuffers(1, &newVBO);
+            gl.DeleteBuffers(1, &newVBO);
         }
         if (newVAO != 0) {
-            glDeleteVertexArrays(1, &newVAO);
+            gl.DeleteVertexArrays(1, &newVAO);
         }
         return false;
     }
 
     /* binding the vao and vbo, making them active */
-    glBindVertexArray(newVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, newVBO);
+    gl.BindVertexArray(newVAO);
+    gl.BindBuffer(GL_ARRAY_BUFFER, newVBO);
 
     /* copying the vertices from the cpu to the gpu */
-    glBufferData(GL_ARRAY_BUFFER,
+    gl.BufferData(GL_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(vertices_.size() * sizeof(Vertex)),
                  vertices_.data(),
                  GL_STATIC_DRAW);
 
     /* configuring shader attribute location 0 as position */
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+    gl.VertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
                           sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, position)));
-    glEnableVertexAttribArray(0);
+    gl.EnableVertexAttribArray(0);
 
     /* configuring shader attribute location 1 for the normals */
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
+    gl.VertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE,
                           sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, normal)));
-    glEnableVertexAttribArray(1);
+    gl.EnableVertexAttribArray(1);
 
     /* configuring shader attribute location 2 for texture coordinates */
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
+    gl.VertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE,
                           sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, uv)));
-    glEnableVertexAttribArray(2);
+    gl.EnableVertexAttribArray(2);
 
     /* configuring shader attribute location 3 for vertex colours */
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
+    gl.VertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE,
                           sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, colour)));
-    glEnableVertexAttribArray(3);
+    gl.EnableVertexAttribArray(3);
 
     /* configuring shader attribute location 4 for material colours */
-    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE,
+    gl.VertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE,
                           sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, materialColour)));
-    glEnableVertexAttribArray(4);
+    gl.EnableVertexAttribArray(4);
 
     /* unbinding vao and vbo */
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    gl.BindVertexArray(0);
+    gl.BindBuffer(GL_ARRAY_BUFFER, 0);
 
     if (reportGlErrors("mesh upload")) {
-        glDeleteBuffers(1, &newVBO);
-        glDeleteVertexArrays(1, &newVAO);
+        gl.DeleteBuffers(1, &newVBO);
+        gl.DeleteVertexArrays(1, &newVAO);
         return false;
     }
 
     if (VBO_ != 0) {
-        glDeleteBuffers(1, &VBO_);
+        gl.DeleteBuffers(1, &VBO_);
     }
     if (VAO_ != 0) {
-        glDeleteVertexArrays(1, &VAO_);
+        gl.DeleteVertexArrays(1, &VAO_);
     }
 
     VAO_ = newVAO;
@@ -653,4 +654,3 @@ void ObjModel::generatePlanarUVs(std::vector<Vertex>& vertices) {
         }
     }
 }
-

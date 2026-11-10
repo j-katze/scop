@@ -1,7 +1,6 @@
 #ifndef SHADER_HPP
 #define SHADER_HPP
 
-#include "glad.h"
 #include "mat4.hpp"
 
 #include <string>

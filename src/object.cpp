@@ -1,4 +1,5 @@
 #include "object.hpp"
+#include "gl_functions.hpp"
 
 #include <cmath>
 
@@ -85,18 +86,18 @@ void Object::update(const Shader& shader, float deltaTime) {
     }
 
     /* bind texture to texture onit 0 */
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture_.getTextureId());
+    gl.ActiveTexture(GL_TEXTURE0);
+    gl.BindTexture(GL_TEXTURE_2D, texture_.getTextureId());
 
     /* bind model */
-    glBindVertexArray(objModel_.getVAO());
+    gl.BindVertexArray(objModel_.getVAO());
 
     /* draw model */
-    glDrawArrays(GL_TRIANGLES, 0, objModel_.getVertexCount());
+    gl.DrawArrays(GL_TRIANGLES, 0, objModel_.getVertexCount());
 
     /* unbind texture and model */
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindVertexArray(0);
+    gl.BindTexture(GL_TEXTURE_2D, 0);
+    gl.BindVertexArray(0);
 }
 
 void Object::processKeyboard(MovementDirections direction, float deltaTime) {

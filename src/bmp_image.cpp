@@ -1,5 +1,5 @@
-#include "glad.h"
 #include "bmp_image.hpp"
+#include "gl_functions.hpp"
 #include "gl_errors.hpp"
 
 #include <cstdint>
@@ -29,7 +29,7 @@ bool BmpImage::isImageDataEmpty() const {
 
 void BmpImage::destroy() {
     if (textureID_ != 0) {
-        glDeleteTextures(1, &textureID_);
+        gl.DeleteTextures(1, &textureID_);
         textureID_ = 0;
     }
 }
@@ -177,45 +177,45 @@ bool BmpImage::loadDefaultTexture() {
 bool BmpImage::uploadImageToGPU() {
     GLuint newTexture = 0;
     /* creating texture object */
-    glGenTextures(1, &newTexture);
+    gl.GenTextures(1, &newTexture);
     if (newTexture == 0) {
         std::cerr << "Failed to create OpenGL texture" << std::endl;
         return false;
     }
 
     /* binding the texture object */
-    glBindTexture(GL_TEXTURE_2D, newTexture);
+    gl.BindTexture(GL_TEXTURE_2D, newTexture);
 
     /* set texture wrapping parameters */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     /* set texture filtering parameters */
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     /* set pixel rows to 1 byte al so tightly packed rgb data is read correctly */
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    gl.PixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     /* uploading the texture data to the GPU */
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_.width, image_.height, 0,
+    gl.TexImage2D(GL_TEXTURE_2D, 0, GL_RGB, image_.width, image_.height, 0,
                  GL_RGB, GL_UNSIGNED_BYTE, image_.rgb.data());
 
     /* generating mipmap for the texture */
-    glGenerateMipmap(GL_TEXTURE_2D);
+    gl.GenerateMipmap(GL_TEXTURE_2D);
 
     /* resetting unpack alignment to default */
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    gl.PixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
     /* unbinding the texture object */
-    glBindTexture(GL_TEXTURE_2D, 0);
+    gl.BindTexture(GL_TEXTURE_2D, 0);
 
     if (reportGlErrors("texture upload")) {
-        glDeleteTextures(1, &newTexture);
+        gl.DeleteTextures(1, &newTexture);
         return false;
     }
     if (textureID_ != 0) {
-        glDeleteTextures(1, &textureID_);
+        gl.DeleteTextures(1, &textureID_);
     }
     textureID_ = newTexture;
     return true;

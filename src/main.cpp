@@ -1,11 +1,10 @@
-#include "glad.h"
-#include <GLFW/glfw3.h>
-
+#include "gl_functions.hpp"
+#include "gl_errors.hpp"
 #include "shader.hpp"
 #include "camera.hpp"
 #include "object.hpp"
-#include "gl_errors.hpp"
 
+#include <GLFW/glfw3.h>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -107,9 +106,9 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
 
-        /* load OpenGL function pointers via GLAD */
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-            std::cerr << "Failed to load OpenGL functions with GLAD\n";
+        /* load OpenGL function pointers */
+        if (!gl.load()) {
+            std::cerr << "Failed to load required OpenGL functions" << std::endl;
             return EXIT_FAILURE;
         }
 
@@ -117,14 +116,14 @@ int main(int argc, char* argv[]) {
         if (glfwErrorOccured) {
             return EXIT_FAILURE;
         }
-        glViewport(0, 0, context.screenWidth, context.screenHeight);
+        gl.Viewport(0, 0, context.screenWidth, context.screenHeight);
 
         glfwSetInputMode(w.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         if (glfwErrorOccured) {
             return EXIT_FAILURE;
         }
 
-        glEnable(GL_DEPTH_TEST);
+        gl.Enable(GL_DEPTH_TEST);
 
         if (reportGlErrors("initial setup")) {
             return EXIT_FAILURE;
@@ -166,8 +165,8 @@ int main(int argc, char* argv[]) {
             context.lastFrame = currentFrame;
 
             /* process input */
-            processInput(w.window);
             glfwPollEvents();
+            processInput(w.window);
             if (reportGlErrors("input and callbacks")) {
                 return EXIT_FAILURE;
             }
@@ -176,8 +175,8 @@ int main(int argc, char* argv[]) {
             }
 
             /* clear buffers */
-            glClearColor(0.30f, 0.25f, 0.42f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            gl.ClearColor(0.30f, 0.25f, 0.42f, 1.0f);
+            gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             /* activate the shader */
             shader.use();
@@ -299,10 +298,10 @@ void processInput(GLFWwindow *window) {
     if (pressKeyOnce(window, GLFW_KEY_3)) {
         context->renderWireframe = !context->renderWireframe;
         if (context->renderWireframe) {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+            gl.PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         }
         else {
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+            gl.PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
     }
     if (pressKeyOnce(window, GLFW_KEY_T)) {
@@ -323,7 +322,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     context->screenWidth = width;
     context->screenHeight = height;
 
-    glViewport(0, 0, width, height);
+    gl.Viewport(0, 0, width, height);
 }
 
 /* whenever mouse moves this callback is called */

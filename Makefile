@@ -4,22 +4,16 @@ CC =		gcc
 
 SDIR =		./src/
 SFILES =	main.cpp vec3.cpp vec2.cpp mat4.cpp camera.cpp object.cpp \
-			obj_model.cpp bmp_image.cpp mtl_material.cpp shader.cpp gl_errors.cpp
+			obj_model.cpp bmp_image.cpp mtl_material.cpp shader.cpp gl_errors.cpp gl_functions.cpp
 SRCS =		$(addprefix ${SDIR}, ${SFILES})
-
-GLAD =		./glad/src/glad.c
 
 ODIR =		./obj/
 OFILES =	$(SFILES:.cpp=.o)
 OBJS =		$(addprefix ${ODIR}, ${OFILES})
 
-OBJSGLAD =	$(ODIR)glad.o
-
 IDIR =		./inc/
 
-IDIRGLAD =	./glad/inc/
-
-CPPFLAGS =	-I $(IDIR) -I $(IDIRGLAD)
+CPPFLAGS =	-I $(IDIR)
 CXXFLAGS =	-Wall -Wextra -Werror -std=c++11 # -g -O0	# uncomment for debugging
 CFLAGS =	#-fPIE
 LDLIBS =	-lglfw
@@ -47,14 +41,10 @@ B_WHITE =	\e[1;37m
 
 all:	$(NAME)
 
-$(NAME):	$(ODIR) $(OBJS) $(OBJSGLAD)
+$(NAME):	$(ODIR) $(OBJS)
 	@printf "$(CYAN)- linking executable: $(NAME)$(RESET)\n"
-	@$(CXX) $(OBJS) $(OBJSGLAD) $(LDLIBS) -o $@
+	@$(CXX) $(OBJS) $(LDLIBS) -o $@
 	@printf "$(B_GREEN)- complete!$(RESET)\n"
-
-$(ODIR)glad.o: $(GLAD) | $(ODIR)
-	@printf "$(BLUE)- compiling glad$(RESET)\n"
-	@$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(ODIR)%.o:	$(SDIR)%.cpp | $(ODIR)
 	@printf "$(BLUE)- compiling object from: $<$(RESET)\n"

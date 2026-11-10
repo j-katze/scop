@@ -1,5 +1,4 @@
 #include "camera.hpp"
-#include "glad.h"
 
 #include <cmath>
 #include <iomanip>
@@ -95,7 +94,7 @@ void Camera::processMouseMovement(float xoffset, float yoffset) {
     }
 
     if (cameraMode_ == CameraMode::ORBITCAM) {
-        // updateOrbitCamera();
+        updateOrbitCameraVectors();
     }
     else {
         updateCameraVectors();

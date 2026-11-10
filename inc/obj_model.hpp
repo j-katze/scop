@@ -1,8 +1,6 @@
 #ifndef OBJ_MODEL_HPP
 #define OBJ_MODEL_HPP
 
-#include "glad.h"
-
 #include "vec3.hpp"
 #include "vec2.hpp"
 #include "mtl_material.hpp"
@@ -12,6 +10,7 @@
 #include <vector>
 #include <map>
 #include <cstdlib>
+#include <GL/glcorearb.h>
 
 class ObjModel {
 public:
