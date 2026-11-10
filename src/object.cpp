@@ -22,6 +22,10 @@ Object::Object(Vec3 position, float yaw, float pitch, float roll)
     targetScale_ = scale_;
 }
 
+Object::~Object() {
+    destroy();
+}
+
 const ObjModel& Object::getObjModel() const {
     return objModel_;
 }

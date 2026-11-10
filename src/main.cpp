@@ -19,8 +19,6 @@ void error_callback(int error, const char* description);
 
 void processInput(GLFWwindow *window);
 
-void clearGlErrors();
-
 enum class RenderMode {
     SINGLECOLOUR,
     VERTEXCOLOUR,
@@ -72,7 +70,7 @@ bool glfwErrorOccured = false;
 int main(int argc, char* argv[]) {
     try {
         glfwSetErrorCallback(error_callback);
-        glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
+        // glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
         /* initialize */
         if (!glfwInit()) {
             std::cerr << "Failed to initialize GLFW" << std::endl;
@@ -83,8 +81,8 @@ int main(int argc, char* argv[]) {
         AppContext context;
 
         /* use OpenGl 3.3 core profile (core profile excludes older and deprecated features) */
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         if (glfwErrorOccured) {
             return EXIT_FAILURE;
@@ -172,6 +170,9 @@ int main(int argc, char* argv[]) {
             glfwPollEvents();
             if (reportGlErrors("input and callbacks")) {
                 return EXIT_FAILURE;
+            }
+            if (glfwWindowShouldClose(w.window)) {
+                break;
             }
 
             /* clear buffers */

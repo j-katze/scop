@@ -19,6 +19,10 @@ enum class MovementDirections {
 class Object {
 public:
     Object(Vec3 position = {0.0f, 0.0f, 0.0f}, float yaw = 0.0f, float pitch = 0.0f, float roll = 0.0f);
+    ~Object();
+    Object(const Object&) = delete;
+    Object& operator=(const Object&) = delete;
+
 
     const ObjModel& getObjModel() const;
     const BmpImage& getBmpTexture() const;
