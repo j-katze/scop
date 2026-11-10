@@ -20,11 +20,8 @@ IDIR =		./inc/
 IDIRGLAD =	./glad/inc/
 
 CPPFLAGS =	-I $(IDIR) -I $(IDIRGLAD)
-
-CXXFLAGS =	-Wall -Wextra -Werror -std=c++11 -g -O0
-
+CXXFLAGS =	-Wall -Wextra -Werror -std=c++11 # -g -O0	# uncomment for debugging
 CFLAGS =	-fPIE
-
 LDLIBS =	-lglfw
 
 # reset text colour to default

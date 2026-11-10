@@ -91,7 +91,7 @@ void Object::update(const Shader& shader, float deltaTime) {
     glDrawArrays(GL_TRIANGLES, 0, objModel_.getVertexCount());
 
     /* unbind texture and model */
-    glBindTexture(GL_TEXTURE0, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
     glBindVertexArray(0);
 }
 

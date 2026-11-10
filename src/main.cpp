@@ -16,34 +16,10 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void error_callback(int error, const char* description);
+
 void processInput(GLFWwindow *window);
 
 void clearGlErrors();
-
-bool glfwErrorOccured = false;
-
-/* settings */
-int SCR_WIDTH = 800;
-int SCR_HEIGHT = 600;
-
-/* camera */
-//   Y      +Y up    -Y down
-//   |
-//   +--X   +X right -X left
-//  /
-// Z        +Z back  -Z front
-
-//             X     Y     Z
-Camera camera({0.0f, 0.0f, 10.0f});
-Object model;
-
-float  lastX = SCR_WIDTH / 2.0f;
-float  lastY = SCR_HEIGHT / 2.0f;
-bool   firstMouse = true;
-
-/* timing */
-float deltaTime = 0.0f;
-float lastFrame = 0.0f;
 
 enum class RenderMode {
     SINGLECOLOUR,
@@ -51,9 +27,30 @@ enum class RenderMode {
     TEXTURE
 };
 
-RenderMode currentMode = RenderMode::VERTEXCOLOUR;
-RenderMode nextMode = RenderMode::VERTEXCOLOUR;
-float blendAmount = 1.0f;
+struct AppContext {
+    Object*     model        = nullptr;
+    Camera*     camera       = nullptr;
+
+    /* initial window dimensions */
+    int         screenWidth  = 800;
+    int         screenHeight = 600;
+
+    /* prevent sudden camera movement when first entering window */
+    float       lastX        = screenWidth / 2.0f;
+    float       lastY        = screenHeight / 2.0f;
+    bool        firstMouse   = true;
+
+    /* timing */
+    float       deltaTime    = 0.0f;
+    float       lastFrame    = 0.0f;
+
+    /* model display */
+    RenderMode  currentMode  = RenderMode::VERTEXCOLOUR;
+    RenderMode  nextMode     = RenderMode::VERTEXCOLOUR;
+    float       blendAmount  = 1.0f;
+
+    bool renderWireframe     = false;
+};
 
 struct GlfwGuard {
     ~GlfwGuard() {
@@ -69,17 +66,21 @@ struct WindowGuard {
     }
 };
 
-bool renderWireframe = false;
+/* glfw error handling */
+bool glfwErrorOccured = false;
 
 int main(int argc, char* argv[]) {
     try {
         glfwSetErrorCallback(error_callback);
+        glfwInitHint(GLFW_WAYLAND_LIBDECOR, GLFW_WAYLAND_DISABLE_LIBDECOR);
         /* initialize */
         if (!glfwInit()) {
             std::cerr << "Failed to initialize GLFW" << std::endl;
             return EXIT_FAILURE;
         }
         GlfwGuard glfwGuard;
+
+        AppContext context;
 
         /* use OpenGl 3.3 core profile (core profile excludes older and deprecated features) */
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -90,8 +91,7 @@ int main(int argc, char* argv[]) {
         }
 
         /* create window */
-        // GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "scop", NULL, NULL);
-        WindowGuard w{glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "scop", NULL, NULL)};
+        WindowGuard w{glfwCreateWindow(context.screenWidth, context.screenHeight, "scop", NULL, NULL)};
         if (w.window == NULL) {
             std::cout << "Failed to create GLFW window" << std::endl;
             return EXIT_FAILURE;
@@ -115,11 +115,11 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
 
-        glfwGetFramebufferSize(w.window, &SCR_WIDTH, &SCR_HEIGHT);
+        glfwGetFramebufferSize(w.window, &context.screenWidth, &context.screenHeight);
         if (glfwErrorOccured) {
             return EXIT_FAILURE;
         }
-        glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+        glViewport(0, 0, context.screenWidth, context.screenHeight);
 
         glfwSetInputMode(w.window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
         if (glfwErrorOccured) {
@@ -139,6 +139,8 @@ int main(int argc, char* argv[]) {
         }
 
         /* loading model and texture */
+        Object model;
+
         bool modelLoaded = argc > 1 && model.loadModel(argv[1]);
         if (!modelLoaded && !model.loadDefaultCube()) {
             return EXIT_FAILURE;
@@ -153,15 +155,24 @@ int main(int argc, char* argv[]) {
             return EXIT_FAILURE;
         }
 
+        Camera camera({0.0f, 0.0f, 10.0f});
+        context.model = &model;
+        context.camera = &camera;
+        glfwSetWindowUserPointer(w.window, &context);
+
         /* render loop */
         while (!glfwWindowShouldClose(w.window)) {
             /* get deltatime */
             float currentFrame = static_cast<float>(glfwGetTime());
-            deltaTime = currentFrame - lastFrame;
-            lastFrame = currentFrame;
+            context.deltaTime = currentFrame - context.lastFrame;
+            context.lastFrame = currentFrame;
 
             /* process input */
             processInput(w.window);
+            glfwPollEvents();
+            if (reportGlErrors("input and callbacks")) {
+                return EXIT_FAILURE;
+            }
 
             /* clear buffers */
             glClearColor(0.30f, 0.25f, 0.42f, 1.0f);
@@ -171,44 +182,43 @@ int main(int argc, char* argv[]) {
             shader.use();
 
             /* blend between render modes if mode was switched */
-            if (blendAmount < 1.0f) {
-                blendAmount = smoothlerp(blendAmount, 1.0f, 6.0f, deltaTime);
-                if (std::abs(blendAmount - 1.0f) < 0.02f) {
-                    blendAmount = 1.0f;
-                    currentMode = nextMode;
+            if (context.blendAmount < 1.0f) {
+                context.blendAmount = smoothlerp(context.blendAmount, 1.0f, 6.0f, context.deltaTime);
+                if (std::abs(context.blendAmount - 1.0f) < 0.02f) {
+                    context.blendAmount = 1.0f;
+                    context.currentMode = context.nextMode;
                 }
             }
 
-            shader.setInt("currentMode", static_cast<int>(currentMode));
-            shader.setInt("nextMode", static_cast<int>(nextMode));
-            shader.setFloat("blendAmount", blendAmount);
+            shader.setInt("currentMode", static_cast<int>(context.currentMode));
+            shader.setInt("nextMode", static_cast<int>(context.nextMode));
+            shader.setFloat("blendAmount", context.blendAmount);
 
-            camera.update(shader, deltaTime, (float)SCR_WIDTH, (float)SCR_HEIGHT);
-            model.update(shader, deltaTime);
+            camera.update(shader, context.deltaTime, (float)context.screenWidth, (float)context.screenHeight);
+            model.update(shader, context.deltaTime);
 
             glfwSwapBuffers(w.window);
-            glfwPollEvents();
-            if (glfwErrorOccured) {
+            if (glfwErrorOccured || reportGlErrors("rendering")) {
                 return EXIT_FAILURE;
             }
         }
-        shader.destroy();
-        model.destroy();
         return EXIT_SUCCESS;
-
-    } catch (const std::bad_alloc&) {
+    }
+    catch (const std::bad_alloc&) {
         std::cerr << "Out of memory; shutting down." << std::endl;
         return EXIT_FAILURE;
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception& e) {
         std::cerr << "Fatal error: " << e.what() << std::endl;
         return EXIT_FAILURE;
     }
 }
 
-void switchRendermode(RenderMode newMode) {
-    if (blendAmount >= 1.0f && newMode != currentMode) {
-        nextMode = newMode;
-        blendAmount = 0.0f;
+void switchRendermode(AppContext* context, RenderMode newMode) {
+
+    if (context->blendAmount >= 1.0f && newMode != context->currentMode) {
+        context->nextMode = newMode;
+        context->blendAmount = 0.0f;
     }
 }
 
@@ -226,66 +236,68 @@ bool pressKeyOnce(GLFWwindow *window, int key) {
 
 /* process input */
 void processInput(GLFWwindow *window) {
+    AppContext* context = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
+
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
-    if (camera.getCameraActive()) {
+    if (context->camera->getCameraActive()) {
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            camera.processKeyboard(MovementDirections::FORWARD, deltaTime);
+            context->camera->processKeyboard(MovementDirections::FORWARD, context->deltaTime);
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            camera.processKeyboard(MovementDirections::BACKWARD, deltaTime);
+            context->camera->processKeyboard(MovementDirections::BACKWARD, context->deltaTime);
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            camera.processKeyboard(MovementDirections::LEFT, deltaTime);
+            context->camera->processKeyboard(MovementDirections::LEFT, context->deltaTime);
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            camera.processKeyboard(MovementDirections::RIGHT, deltaTime);
+            context->camera->processKeyboard(MovementDirections::RIGHT, context->deltaTime);
         }
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-            camera.processKeyboard(MovementDirections::UP, deltaTime);
+            context->camera->processKeyboard(MovementDirections::UP, context->deltaTime);
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-            camera.processKeyboard(MovementDirections::DOWN, deltaTime);
+            context->camera->processKeyboard(MovementDirections::DOWN, context->deltaTime);
         }
         if (pressKeyOnce(window, GLFW_KEY_R)) {
-            camera.toggleFreeCam();
+            context->camera->toggleFreeCam();
         }
     }
     else {
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            model.processKeyboard(MovementDirections::FORWARD, deltaTime);
+            context->model->processKeyboard(MovementDirections::FORWARD, context->deltaTime);
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            model.processKeyboard(MovementDirections::BACKWARD, deltaTime);
+            context->model->processKeyboard(MovementDirections::BACKWARD, context->deltaTime);
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            model.processKeyboard(MovementDirections::LEFT, deltaTime);
+            context->model->processKeyboard(MovementDirections::LEFT, context->deltaTime);
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            model.processKeyboard(MovementDirections::RIGHT, deltaTime);
+            context->model->processKeyboard(MovementDirections::RIGHT, context->deltaTime);
         }
         if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-            model.processKeyboard(MovementDirections::UP, deltaTime);
+            context->model->processKeyboard(MovementDirections::UP, context->deltaTime);
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
-            model.processKeyboard(MovementDirections::DOWN, deltaTime);
+            context->model->processKeyboard(MovementDirections::DOWN, context->deltaTime);
         }
     }
     if (pressKeyOnce(window, GLFW_KEY_1)) {
-        if (currentMode == RenderMode::VERTEXCOLOUR) {
-            switchRendermode(RenderMode::TEXTURE);
+        if (context->currentMode == RenderMode::VERTEXCOLOUR) {
+            switchRendermode(context, RenderMode::TEXTURE);
         }
         else {
-            switchRendermode(RenderMode::VERTEXCOLOUR);
+            switchRendermode(context, RenderMode::VERTEXCOLOUR);
         }
     }
     if (pressKeyOnce(window, GLFW_KEY_2)) {
-        switchRendermode(RenderMode::SINGLECOLOUR);
+        switchRendermode(context, RenderMode::SINGLECOLOUR);
     }
     if (pressKeyOnce(window, GLFW_KEY_3)) {
-        renderWireframe = !renderWireframe;
-        if (renderWireframe) {
+        context->renderWireframe = !context->renderWireframe;
+        if (context->renderWireframe) {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         }
         else {
@@ -293,8 +305,8 @@ void processInput(GLFWwindow *window) {
         }
     }
     if (pressKeyOnce(window, GLFW_KEY_T)) {
-        camera.toggleCameraActive();
-        if (camera.getCameraActive()) {
+        context->camera->toggleCameraActive();
+        if (context->camera->getCameraActive()) {
             glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
         }
         else {
@@ -305,51 +317,56 @@ void processInput(GLFWwindow *window) {
 
 /* make sure viewport matches window dimensions after rezising */
 void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    (void)window;
-    SCR_WIDTH = width;
-    SCR_HEIGHT = height;
+    AppContext* context = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
+
+    context->screenWidth = width;
+    context->screenHeight = height;
 
     glViewport(0, 0, width, height);
 }
 
 /* whenever mouse moves this callback is called */
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
+    AppContext* context = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
+
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
 
     /* prevents camera from jumping around when mouse enters the window from the side */
-    if (firstMouse) {
-        lastX = xpos;
-        lastY = ypos;
-        firstMouse = false;
+    if (context->firstMouse) {
+        context->lastX = xpos;
+        context->lastY = ypos;
+        context->firstMouse = false;
     }
 
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;
+    float xoffset = xpos - context->lastX;
+    float yoffset = context->lastY - ypos;
 
-    lastX = xpos;
-    lastY = ypos;
+    context->lastX = xpos;
+    context->lastY = ypos;
 
-    if (camera.getCameraActive()) {
-        camera.processMouseMovement(xoffset, yoffset);
+    if (context->camera->getCameraActive()) {
+        context->camera->processMouseMovement(xoffset, yoffset);
     }
     else {
         if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-            model.processMouseMovement(xoffset, yoffset, camera.getCameraVectors().up, camera.getCameraVectors().right);
+            context->model->processMouseMovement(xoffset, yoffset, context->camera->getCameraVectors().up,
+                                                 context->camera->getCameraVectors().right);
         }
     }
 }
 
 /* whenever scroll wheel scrolls this callback is called */
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-    (void)window;
     (void)xoffset;
 
-    if (camera.getCameraActive()) {
-        camera.processMouseScroll(yoffset);
+    AppContext* context = static_cast<AppContext*>(glfwGetWindowUserPointer(window));
+
+    if (context->camera->getCameraActive()) {
+        context->camera->processMouseScroll(yoffset);
     }
     else {
-        model.processMouseScroll(yoffset);
+        context->model->processMouseScroll(yoffset);
     }
 }
 
@@ -361,8 +378,4 @@ void error_callback(int error, const char* description) {
     else {
         std::cerr << "GLFW error 0x" << error << ": unknown" << std::endl;
     }
-}
-
-void clearGlErrors() {
-    while (glGetError() != GL_NO_ERROR) {}
 }

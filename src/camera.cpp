@@ -30,7 +30,7 @@ CameraVectors Camera::getCameraVectors() const {
     return {front_, up_, right_};
 }
 
-const bool& Camera::getCameraActive() const {
+bool Camera::getCameraActive() const {
     return cameraActive_;
 }
 

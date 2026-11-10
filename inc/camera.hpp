@@ -11,13 +11,6 @@
 //  /
 // Z        +Z back  -Z front
 
-/* default camera values */
-const float YAW         = 0.0f;
-const float PITCH       = 0.0f;
-const float SPEED       = 2.5f;
-const float SENSITIVITY = 0.1f;
-const float FOV        = 45.0f;
-
 struct CameraVectors {
     Vec3 front;
     Vec3 up;
@@ -26,6 +19,13 @@ struct CameraVectors {
 
 class Camera{
 public:
+    /* default camera values */
+    static constexpr float YAW         = 0.0f;
+    static constexpr float PITCH       = 0.0f;
+    static constexpr float SPEED       = 2.5f;
+    static constexpr float SENSITIVITY = 0.1f;
+    static constexpr float FOV         = 45.0f;
+
     Camera(
         Vec3 position = {0.0f, 0.0f, 0.0f},
         Vec3 up = {0.0f, 1.0f, 0.0f},
@@ -33,7 +33,7 @@ public:
     );
 
     CameraVectors getCameraVectors() const;
-    const bool& getCameraActive() const;
+    bool getCameraActive() const;
 
     /* returns the view matrix calculated using Euler Angles and the LookAt Matrix */
     Mat4 getViewMatrix() const;

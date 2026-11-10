@@ -73,6 +73,8 @@ ___
 ### How AI was used:
 I used Duck.ai as a research and learning aid when I couldn’t find useful information through regular DuckDuckGo searches. I used it to help me understand mathematical formulas I found on Wikipedia and translate them into code and for troubleshooting issues I wasn't able to resolve on my own.
 
+I used it to review parts of the code for potential failure points and identify places where errors could cause problems. This helped me add error handling and cleanup so the program can shut down gracefully rather than crash.
+
 I also used it to learn about implementing planar UV projection. Most of the resources I found described how to use the feature in 3D modeling software rather than how to implement it in code, or were no longer available.
 
 Finally, I used it to help word this section of the README.
