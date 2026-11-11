@@ -16,7 +16,7 @@ IDIR =		./inc/
 CPPFLAGS =	-I $(IDIR)
 CXXFLAGS =	-Wall -Wextra -Werror -std=c++11 -DGLFW_INCLUDE_NONE # -g -O0	# uncomment for debugging
 CFLAGS =	#-fPIE
-LDLIBS =	-lglfw
+LDLIBS =	-lglfw -lGL
 
 # reset text colour to default
 RESET =		\e[0m

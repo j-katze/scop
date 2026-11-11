@@ -1,7 +1,6 @@
 #ifndef GL_FUNCTIONS_HPP
 #define GL_FUNCTIONS_HPP
 
-#include <GLFW/glfw3.h>
 #include <GL/glcorearb.h>
 
 class GLFunctions {
