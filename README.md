@@ -24,7 +24,9 @@ once the project is running use:\
 `mouse wheel` to scale the model\
 `1` to switch between textured and untextured display\
 `2` to display the colours loaded by the .mtl file\
-`3` switch wireframe display on and off\
+`3` to switch wireframe display on and off\
+`4` to toggle between the model rotating on its own and being able to move it with the mouse\
+(the included 42.obj model will auto rotate by default as long as it gets loaded from the model direcory)\
 `T` switch between controlling the model and controlling the camera\
 `ESC` to close the program
 
