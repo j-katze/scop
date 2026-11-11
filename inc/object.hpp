@@ -38,6 +38,8 @@ public:
 
     void update(const Shader& shader, float deltaTime);
 
+    void toggleAutoRotate();
+
     void processKeyboard(MovementDirections direction, float deltaTime);
     void processMouseMovement(float xoffset, float yoffset, Vec3 cameraUp, Vec3 cameraRight);
     void processMouseScroll(float yoffset);
@@ -63,6 +65,8 @@ private:
 
     float    movementSpeed_;
     float    mouseSensitivity_;
+
+    bool     autoRotate_;
 
     void updateModelVectors();
 };

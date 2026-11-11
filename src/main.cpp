@@ -8,8 +8,8 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
-#include <new>
 #include <unordered_map>
+#include <cstring>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
@@ -139,6 +139,9 @@ int main(int argc, char* argv[]) {
         Object model;
 
         bool modelLoaded = argc > 1 && model.loadModel(argv[1]);
+        if (modelLoaded && std::strcmp(argv[1], "models/42.obj") == 0) {
+            model.toggleAutoRotate();
+        }
         if (!modelLoaded && !model.loadDefaultCube()) {
             return EXIT_FAILURE;
         }
@@ -304,6 +307,10 @@ void processInput(GLFWwindow *window) {
             gl.PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         }
     }
+    if (pressKeyOnce(window, GLFW_KEY_4)) {
+        context->model->toggleAutoRotate();
+    }
+
     if (pressKeyOnce(window, GLFW_KEY_T)) {
         context->camera->toggleCameraActive();
         if (context->camera->getCameraActive()) {

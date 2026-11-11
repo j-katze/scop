@@ -14,7 +14,8 @@ Object::Object(Vec3 position, float yaw, float pitch, float roll)
         worldUp_{0.0f, 1.0f, 0.0f},
         worldRight_{1.0f, 0.0f, 0.0f},
         movementSpeed_(2.5f),
-        mouseSensitivity_(0.5f)
+        mouseSensitivity_(0.5f),
+        autoRotate_(false)
 {
     orientation_ = rotate(orientation_, radians(yaw), worldUp_);
     orientation_ = rotate(orientation_, radians(pitch), right_);
@@ -73,6 +74,12 @@ bool Object::loadDefaultTexture() {
 }
 
 void Object::update(const Shader& shader, float deltaTime) {
+    if (autoRotate_) {
+        const float angle = radians(-30 * deltaTime);
+        const Mat4 worldYaw = rotate(Mat4::identityMatrix(), angle, worldUp_);
+        orientation_ = multiply(worldYaw, orientation_);
+        updateModelVectors();
+    }
     const float smoothing = 16.0f;
 
     scale_.x = smoothlerp(scale_.x, targetScale_.x, smoothing, deltaTime);
@@ -100,6 +107,10 @@ void Object::update(const Shader& shader, float deltaTime) {
     gl.BindVertexArray(0);
 }
 
+void Object::toggleAutoRotate() {
+    autoRotate_ = !autoRotate_;
+}
+
 void Object::processKeyboard(MovementDirections direction, float deltaTime) {
     float velocity = movementSpeed_ * deltaTime;
 
@@ -124,6 +135,9 @@ void Object::processKeyboard(MovementDirections direction, float deltaTime) {
 }
 
 void Object::processMouseMovement(float xoffset, float yoffset, Vec3 cameraUp, Vec3 cameraRight) {
+    if (autoRotate_) {
+        return;
+    }
     if (xoffset == 0.0f && yoffset == 0.0f) {
         return;
     }

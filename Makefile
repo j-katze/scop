@@ -1,6 +1,5 @@
 NAME =		scop
 CXX =		c++
-CC =		gcc
 
 SDIR =		./src/
 SFILES =	main.cpp vec3.cpp vec2.cpp mat4.cpp camera.cpp object.cpp \
