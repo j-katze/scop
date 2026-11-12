@@ -142,14 +142,14 @@ int main(int argc, char* argv[]) {
         if (modelLoaded && std::strcmp(argv[1], "models/42.obj") == 0) {
             model.toggleAutoRotate();
         }
-        if (!modelLoaded && !model.loadDefaultCube()) {
-            return EXIT_FAILURE;
-        }
-
         bool textureLoaded = argc > 2 && model.loadTexture(argv[2]);
         if (!textureLoaded) {
             std::cout << "Attempting to loading cat.bmp" << std::endl;
             textureLoaded = model.loadTexture("textures/cat.bmp");
+        }
+
+        if (!modelLoaded && !model.loadDefaultCube()) {
+            return EXIT_FAILURE;
         }
         if (!textureLoaded && !model.loadDefaultTexture()) {
             return EXIT_FAILURE;
